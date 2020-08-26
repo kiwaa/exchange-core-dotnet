@@ -1,6 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using System;
+using System.Collections.Generic;
 
 namespace Exchange.Core
 {
@@ -132,6 +133,19 @@ namespace Exchange.Core
                 handler(mte);
                 mte = mte.NextEvent;
             }
+        }
+
+        /**
+ * Produces garbage
+ * For testing only !!!
+ *
+ * @return list of events
+ */
+        public List<MatcherTradeEvent> extractEvents()
+        {
+            List<MatcherTradeEvent> list = new List<MatcherTradeEvent>();
+            processMatcherEvents(list.Add);
+            return list;
         }
         public class OrderCommandBuilder
         {

@@ -45,5 +45,39 @@ namespace Exchange.Core.Common
             this.AskOrders = new long[askSize];
             this.BidOrders = new long[bidSize];
         }
+
+
+        
+    public override bool Equals(object obj)
+        {
+            if (!(obj is L2MarketData)) {
+                return false;
+            }
+            L2MarketData o = (L2MarketData)obj;
+
+            if (AskSize != o.AskSize || BidSize != o.BidSize)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < AskSize; i++)
+            {
+                if (AskPrices[i] != o.AskPrices[i] || AskVolumes[i] != o.AskVolumes[i] || AskOrders[i] != o.AskOrders[i])
+                {
+                    return false;
+                }
+            }
+            for (int i = 0; i < BidSize; i++)
+            {
+                if (BidPrices[i] != o.BidPrices[i] || BidVolumes[i] != o.BidVolumes[i] || BidOrders[i] != o.BidOrders[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+        // TODO hashcode
     }
 }

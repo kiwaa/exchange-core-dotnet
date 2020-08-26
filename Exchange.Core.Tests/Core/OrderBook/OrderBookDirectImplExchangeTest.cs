@@ -3,16 +3,12 @@ using Exchange.Core.Common;
 using Exchange.Core.Common.Config;
 using Exchange.Core.Orderbook;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ObjectsPool = Exchange.Core.Collections.ObjPool.NaiveObjectsPool;
 
 namespace Exchange.Core.Tests.Core.OrderBook
 {
     [TestFixture]
-    public sealed class OrderBookDirectImplExchangeTest : OrderBookBaseTest
+    public sealed class OrderBookDirectImplExchangeTest : OrderBookDirectImplTest
     {
         protected override IOrderBook createNewOrderBook()
         {
