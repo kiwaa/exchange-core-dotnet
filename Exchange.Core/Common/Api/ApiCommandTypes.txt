@@ -1,0 +1,45 @@
+﻿ApiPlaceOrder :
+    long price
+    long size
+    long orderId
+    OrderAction action
+    OrderType orderType
+    long uid
+    int symbol
+    int userCookie
+    long reservePrice
+
+ApiMoveOrder :
+    long orderId
+    long newPrice
+    long uid
+    int symbol
+
+ApiCancelOrder :
+    long orderId
+    long uid
+    int symbol
+
+ApiReduceOrder :
+    long orderId
+    long uid
+    int symbol
+    long reduceSize
+
+ApiAddUser : 
+	long uid
+
+ApiAdjustUserBalance :
+    long uid
+    int currency
+    long amount
+    long transactionId
+
+ApiBinaryDataCommand :
+    int transferId
+    BinaryDataCommand data
+
+ApiOrderBookRequest :
+    int symbol
+    int size
+

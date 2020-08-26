@@ -1,0 +1,13 @@
+﻿ DirectOrder :
+    long orderId
+    long price
+    long size
+    long filled
+    long reserveBidPrice
+    OrderAction action
+    long uid
+    long timestamp
+    Bucket parent
+    DirectOrder next
+    DirectOrder prev
+

@@ -1,0 +1,34 @@
+﻿ MatcherTradeEvent :
+    MatcherEventType eventType
+    int section
+    bool activeOrderCompleted
+    long matchedOrderId
+    long matchedOrderUid
+    bool matchedOrderCompleted
+    long price
+    long size
+    long bidderHoldPrice
+    MatcherTradeEvent nextEvent
+
+Order :
+    long orderId
+    long price
+    long size
+    long filled
+    long reserveBidPrice
+    OrderAction action
+    long uid
+    long timestamp
+
+CoreSymbolSpecification :
+    int symbolId
+    SymbolType type
+    int baseCurrency
+    int quoteCurrency
+    long baseScaleK
+    long quoteScaleK
+    long takerFee
+    long makerFee
+    long marginBuy
+    long marginSell
+
