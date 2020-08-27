@@ -2,16 +2,11 @@
 using Exchange.Core.Common.Config;
 using Exchange.Core.Orderbook;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Exchange.Core.Tests.Core.OrderBook
 {
     [TestFixture]
-    public sealed class OrderBookNaiveImplExchangeTest : OrderBookBaseTest
+    public sealed class OrderBookNaiveImplMarginTest : OrderBookBaseTest
     {
         protected override IOrderBook createNewOrderBook()
         {
@@ -20,10 +15,8 @@ namespace Exchange.Core.Tests.Core.OrderBook
 
         protected override CoreSymbolSpecification getCoreSymbolSpec()
         {
-            return TestConstants.SYMBOLSPEC_ETH_XBT;
+            return TestConstants.SYMBOLSPEC_EUR_USD;
         }
 
-
     }
-
 }

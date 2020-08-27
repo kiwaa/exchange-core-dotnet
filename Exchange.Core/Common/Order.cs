@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Common
 {
-    public sealed partial class Order //: WriteBytesMarshallable, IOrder
+    public sealed partial class Order : IOrder //: WriteBytesMarshallable
     {
     //public Order(BytesIn bytes)
     //{

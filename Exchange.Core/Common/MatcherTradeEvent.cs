@@ -12,5 +12,17 @@ namespace Exchange.Core.Common
         {
 
         }
+
+        // testing only
+        public static List<MatcherTradeEvent> asList(MatcherTradeEvent next)
+        {
+            List<MatcherTradeEvent> list = new List<MatcherTradeEvent>();
+            while (next != null)
+            {
+                list.Add(next);
+                next = next.NextEvent;
+            }
+            return list;
+        }
     }
 }
