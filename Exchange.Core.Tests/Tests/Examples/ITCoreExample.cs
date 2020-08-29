@@ -125,7 +125,7 @@
 
 
 //            // request order book
-//            //CompletableFuture<L2MarketData> orderBookFuture = api.requestOrderBookAsync(symbolXbtLtc, 10);
+//            //Task<L2MarketData> orderBookFuture = api.requestOrderBookAsync(symbolXbtLtc, 10);
 //            Task<L2MarketData> orderBookFuture = api.requestOrderBookAsync(symbolXbtLtc, 10);
 //            Console.WriteLine("ApiOrderBookRequest result: " + orderBookFuture.Result);
 

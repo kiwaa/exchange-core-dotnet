@@ -13,12 +13,14 @@ namespace Exchange.Core.Orderbook
         public long TotalVolume { get; private set; }
 
         private readonly Dictionary<long, Order> entries;
+        private readonly List<Order> _ordered;
 
 
         public OrdersBucketNaive(long price)
         {
             Price = price;
             this.entries = new Dictionary<long, Order>();
+            _ordered = new List<Order>();
             TotalVolume = 0;
         }
 
@@ -36,7 +38,10 @@ namespace Exchange.Core.Orderbook
          */
         public void put(Order order)
         {
+            if (entries.ContainsKey(order.OrderId))
+                _ordered.Remove(order);
             entries[order.OrderId] = order;
+            _ordered.Add(order);
             TotalVolume += order.Size - order.Filled;
         }
 
@@ -56,6 +61,7 @@ namespace Exchange.Core.Orderbook
             }
 
             entries.Remove(orderId);
+            _ordered.Remove(order);
 
             TotalVolume -= order.Size - order.Filled;
             return order;
@@ -75,7 +81,7 @@ namespace Exchange.Core.Orderbook
 
             //        log.debug("---- match: {}", volumeToCollect);
 
-            IEnumerator<KeyValuePair<long, Order>> iterator = entries.GetEnumerator();
+            IEnumerator<Order> iterator = _ordered.GetEnumerator();
 
             long totalMatchingVolume = 0;
 
@@ -84,13 +90,12 @@ namespace Exchange.Core.Orderbook
             MatcherTradeEvent eventsHead = null;
             MatcherTradeEvent eventsTail = null;
 
-            var toRemove = new List<long>();
+            var toRemove = new List<Order>();
 
             // iterate through all orders
             while (iterator.MoveNext() && volumeToCollect > 0)
             {
-                KeyValuePair<long, Order> next = iterator.Current;
-                Order order = next.Value;
+                Order order = iterator.Current;
 
                 // calculate exact volume can fill for this order
                 //            log.debug("volumeToCollect={} order: s{} f{}", volumeToCollect, order.size, order.filled);
@@ -122,11 +127,12 @@ namespace Exchange.Core.Orderbook
                 {
                     ordersToRemove.Add(order.OrderId);
                     //iterator.remove();
-                    toRemove.Add(next.Key);
+                    toRemove.Add(order);
                 }
             }
 
-            toRemove.ForEach(x => entries.Remove(x));
+            toRemove.ForEach(x => entries.Remove(x.OrderId));
+            toRemove.ForEach(x => _ordered.Remove(x));
 
             return new MatcherResult(eventsHead, eventsTail, totalMatchingVolume, ordersToRemove);
         }
@@ -174,7 +180,7 @@ namespace Exchange.Core.Orderbook
          */
         public List<Order> getAllOrders()
         {
-            return new List<Order>(entries.Values);
+            return _ordered;
         }
 
 

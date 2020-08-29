@@ -623,6 +623,7 @@ namespace Exchange.Core.Orderbook
             return buckets.Values.Select(x => x.TotalVolume).Sum();
         }
 
+
         //public void writeMarshallable(BytesOut bytes)
         //{
         //    bytes.writeByte(getImplementationType().getCode());

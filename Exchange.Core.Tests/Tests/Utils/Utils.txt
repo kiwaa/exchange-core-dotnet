@@ -1,0 +1,36 @@
+﻿TestDataFutures :
+    Task<List<CoreSymbolSpecification>> coreSymbolSpecifications
+    Task<List<BitSet>> usersAccounts
+    Task<MultiSymbolGenResult> genResult
+
+TestDataParameters :
+    int totalTransactionsNumber
+    int targetOrderBookOrdersTotal
+    int numAccounts
+    HashSet<int> currenciesAllowed
+    int numSymbols
+    AllowedSymbolTypes allowedSymbolTypes
+    Func<TestOrdersGeneratorConfig,int> preFillMode
+    bool avalancheIOC
+
+TestOrdersGeneratorConfig :
+    List<CoreSymbolSpecification> coreSymbolSpecifications
+    int totalTransactionsNumber
+    List<BitSet> usersAccounts
+    int targetOrderBookOrdersTotal
+    int seed
+    bool avalancheIOC
+    Func<TestOrdersGeneratorConfig,int> preFillMode
+
+GenResult :
+    L2MarketData finalOrderBookSnapshot
+    int finalOrderbookHash
+    List<OrderCommand> commandsFill
+    List<OrderCommand> commandsBenchmark
+
+MultiSymbolGenResult :
+    Dictionary<int,GenResult> genResults
+    Task<List<ApiCommand>> apiCommandsFill
+    Task<List<ApiCommand>> apiCommandsBenchmark
+    int benchmarkCommandsSize
+

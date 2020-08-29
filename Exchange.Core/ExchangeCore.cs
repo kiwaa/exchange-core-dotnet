@@ -1,9 +1,9 @@
 ﻿using Exchange.Core.Common.Config;
 using System;
 
-namespace Exchange.Core.Tests.Examples
+namespace Exchange.Core
 {
-    internal class ExchangeCore
+    public class ExchangeCore
     {  
         // enable MatcherTradeEvent pooling
         public static readonly bool EVENTS_POOLING = false;

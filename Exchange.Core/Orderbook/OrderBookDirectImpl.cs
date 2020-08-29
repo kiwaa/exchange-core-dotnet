@@ -858,6 +858,26 @@ namespace Exchange.Core.Orderbook
             return bidPriceBuckets.size(limit);
         }
 
+        public IEnumerable<IOrder> askOrdersStream(bool sorted)
+        {
+            var current = bestAskOrder;
+            while (current != null)
+            {
+                yield return current;
+                current = current.Prev;
+            }
+        }
+
+        public IEnumerable<IOrder> bidOrdersStream(bool sorted)
+        {
+            var current = bestBidOrder;
+            while (current != null)
+            {
+                yield return current;
+                current = current.Prev;
+            }
+        }
+
         //public void writeMarshallable(BytesOut bytes)
         //{
         //    bytes.writeByte(getImplementationType().getCode());

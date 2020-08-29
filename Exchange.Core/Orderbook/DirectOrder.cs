@@ -88,12 +88,16 @@ namespace Exchange.Core.Orderbook
         //            && uid == other.uid;
         //}
 
-        //@Override
-        //    public int stateHash()
-        //{
-        //    return Objects.hash(orderId, action, price, size, reserveBidPrice, filled,
-        //            //userCookie,
-        //            uid);
-        //}
+        public int stateHash()
+        {
+            return (int)(97 * OrderId +
+                997 * (int)Action +
+                9997 * Price +
+                99997 * Size +
+                999997 * ReserveBidPrice +
+                9999997 * Filled +
+                    //userCookie,
+                99999997 * Uid);
+        }
     }
 }

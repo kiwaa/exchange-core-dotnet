@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Common
 {
-    public interface IOrder //: StateHash
+    public interface IOrder : IStateHash
     {
         long Price { get; }
         long Size { get; }

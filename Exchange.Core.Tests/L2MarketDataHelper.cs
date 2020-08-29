@@ -16,6 +16,16 @@ namespace Exchange.Core.Tests
         private List<long> bidVolumes;
         private List<long> bidOrders;
 
+        public L2MarketDataHelper()
+        {
+            askPrices = new List<long>();
+            askVolumes = new List<long>();
+            askOrders = new List<long>();
+            bidPrices = new List<long>();
+            bidVolumes = new List<long>();
+            bidOrders = new List<long>();
+        }
+
         public L2MarketDataHelper(L2MarketData l2)
         {
             askPrices = l2.AskPrices.ToList();

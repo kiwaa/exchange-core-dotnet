@@ -69,41 +69,41 @@ namespace Exchange.Core.Common.Config
             private LoggingConfiguration _loggingConfiguration;
             private SerializationConfiguration _serializationConfiguration;
 
-            internal ExchangeConfiguration build()
+            public ExchangeConfiguration build()
             {
                 throw new NotImplementedException();
             }
 
-            internal ExchangeConfigurationBuilder ordersProcessingCfg(OrdersProcessingConfiguration value)
+            public ExchangeConfigurationBuilder ordersProcessingCfg(OrdersProcessingConfiguration value)
             {
                 _ordersProcessingConfiguration = value;
                 return this;
             }
 
-            internal ExchangeConfigurationBuilder performanceCfg(PerformanceConfiguration value)
+            public ExchangeConfigurationBuilder performanceCfg(PerformanceConfiguration value)
             {
                 _performanceConfiguration = value;
                 return this;
             }
 
-            internal ExchangeConfigurationBuilder initStateCfg(InitialStateConfiguration value)
+            public ExchangeConfigurationBuilder initStateCfg(InitialStateConfiguration value)
             {
                 _initialStateConfiguration = value;
                 return this;
             }
 
-            internal ExchangeConfigurationBuilder reportsQueriesCfg(ReportsQueriesConfiguration value)
+            public ExchangeConfigurationBuilder reportsQueriesCfg(ReportsQueriesConfiguration value)
             {
                 _reportsQueriesConfiguration = value;
                 return this;
             }
 
-            internal ExchangeConfigurationBuilder loggingCfg(LoggingConfiguration value)
+            public ExchangeConfigurationBuilder loggingCfg(LoggingConfiguration value)
             {
                 _loggingConfiguration = value;
                 return this;
             }
-            internal ExchangeConfigurationBuilder serializationCfg(SerializationConfiguration value)
+            public ExchangeConfigurationBuilder serializationCfg(SerializationConfiguration value)
             {
                 _serializationConfiguration = value;
                 return this;

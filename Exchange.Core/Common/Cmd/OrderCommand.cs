@@ -13,9 +13,9 @@ namespace Exchange.Core
         }
 
         public OrderCommandType Command { get; }
-        public long OrderId { get; }
+        public long OrderId { get; set; }
 
-        public int Symbol { get; }
+        public int Symbol { get; set; }
 
         public long Price { get; }
         public long Size { get; }
@@ -39,7 +39,7 @@ namespace Exchange.Core
         public int serviceFlags { get; }
 
         // result code of command execution - can also be used for saving intermediate state
-        public CommandResultCode ResultCode { get; }
+        public CommandResultCode ResultCode { get; set; }
         // trade events chain
         public MatcherTradeEvent MatcherEvent { get; set; }
         // optional market data
@@ -147,6 +147,12 @@ namespace Exchange.Core
             processMatcherEvents(list.Add);
             return list;
         }
+
+        public int stateHash()
+        {
+            throw new InvalidOperationException("Command does not represents state");
+        }
+
         public class OrderCommandBuilder
         {
             private OrderCommandType _command;

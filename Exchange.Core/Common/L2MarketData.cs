@@ -47,8 +47,28 @@ namespace Exchange.Core.Common
         }
 
 
-        
-    public override bool Equals(object obj)
+        public long totalOrderBookVolumeAsk()
+        {
+            long totalVolume = 0L;
+            for (int i = 0; i < AskSize; i++)
+            {
+                totalVolume += AskVolumes[i];
+            }
+            return totalVolume;
+        }
+
+        public long totalOrderBookVolumeBid()
+        {
+            long totalVolume = 0L;
+            for (int i = 0; i < BidSize; i++)
+            {
+                totalVolume += BidVolumes[i];
+            }
+            return totalVolume;
+        }
+
+
+        public override bool Equals(object obj)
         {
             if (!(obj is L2MarketData)) {
                 return false;

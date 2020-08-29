@@ -1,6 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Orderbook;
+using Exchange.Core.Tests.Utils;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +16,15 @@ namespace Exchange.Core.Tests.Core.OrderBook
  */
     public abstract class OrderBookBaseTest
     {
-        IOrderBook orderBook;
+        protected IOrderBook orderBook;
 
         private L2MarketDataHelper expectedState;
 
-        static readonly long INITIAL_PRICE = 81600L;
-        static readonly long MAX_PRICE = 400000L;
+        protected static readonly long INITIAL_PRICE = 81600L;
+        protected static readonly long MAX_PRICE = 400000L;
 
-        static readonly long UID_1 = 412L;
-        static readonly long UID_2 = 413L;
+        protected static readonly long UID_1 = 412L;
+        protected static readonly long UID_2 = 413L;
 
         protected abstract IOrderBook createNewOrderBook();
 
@@ -79,7 +80,7 @@ namespace Exchange.Core.Tests.Core.OrderBook
             clearOrderBook();
         }
 
-        void clearOrderBook()
+        protected void clearOrderBook()
         {
             orderBook.validateInternalState();
             L2MarketData snapshot = orderBook.getL2MarketDataSnapshot(int.MaxValue);
@@ -795,35 +796,35 @@ namespace Exchange.Core.Tests.Core.OrderBook
         }
 
 
-        //[Test]
-        //public void multipleCommandsKeepInternalStateTest()
-        //{
+        [Test]
+        public void multipleCommandsKeepInternalStateTest()
+        {
 
-        //    int tranNum = 25000;
+            int tranNum = 25000;
 
-        //    IOrderBook localOrderBook = createNewOrderBook();
-        //    localOrderBook.validateInternalState();
+            IOrderBook localOrderBook = createNewOrderBook();
+            localOrderBook.validateInternalState();
 
-        //    TestOrdersGenerator.GenResult genResult = TestOrdersGenerator.generateCommands(
-        //            tranNum,
-        //            200,
-        //            6,
-        //            TestOrdersGenerator.UID_PLAIN_MAPPER,
-        //            0,
-        //            false,
-        //            false,
-        //            TestOrdersGenerator.createAsyncProgressLogger(tranNum),
-        //            348290254);
+            GenResult genResult = TestOrdersGenerator.generateCommands(
+                    tranNum,
+                    200,
+                    6,
+                    TestOrdersGenerator.UID_PLAIN_MAPPER,
+                    0,
+                    false,
+                    false,
+                    TestOrdersGenerator.createAsyncProgressLogger(tranNum),
+                    348290254);
 
-        //    genResult.getCommands().forEach(cmd-> {
-        //        cmd.orderId += 100; // TODO set start id
-        //                            //log.debug("{}",  cmd);
-        //        CommandResultCode commandResultCode = IOrderBook.processCommand(localOrderBook, cmd);
-        //        Assert.AreEqual(commandResultCode, is (CommandResultCode.SUCCESS));
-        //        localOrderBook.validateInternalState();
-        //    });
-
-        //}
+            foreach (var cmd in genResult.getCommands())
+            {
+                cmd.OrderId += 100; // TODO set start id
+                                    //log.debug("{}",  cmd);
+                CommandResultCode commandResultCode = IOrderBook.processCommand(localOrderBook, cmd);
+                Assert.AreEqual(commandResultCode, CommandResultCode.SUCCESS);
+                localOrderBook.validateInternalState();
+            }
+        }
 
         // ------------------------------- UTILITY METHODS --------------------------
 

@@ -1,5 +1,6 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
+using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Orderbook
 {
-    public interface IOrderBook //: WriteBytesMarshallable, StateHash 
+    public interface IOrderBook : IStateHash //WriteBytesMarshallable, 
     {
 
         /**
@@ -86,33 +87,31 @@ namespace Exchange.Core.Orderbook
 
         CoreSymbolSpecification getSymbolSpec();
 
-        //Stream<? extends IOrder> askOrdersStream(boolean sorted);
+        IEnumerable<IOrder> askOrdersStream(bool sorted);
 
-        //Stream<? extends IOrder> bidOrdersStream(boolean sorted);
+        IEnumerable<IOrder> bidOrdersStream(bool sorted);
 
-        ///**
-        // * State hash for order books is implementation-agnostic
-        // * Look {@link IOrderBook#validateInternalState} for full internal state validation for de-serialized objects
-        // *
-        // * @return state hash code
-        // */
-        //@Override
-        //default int stateHash()
-        //{
+        /**
+         * State hash for order books is implementation-agnostic
+         * Look {@link IOrderBook#validateInternalState} for full internal state validation for de-serialized objects
+         *
+         * @return state hash code
+         */
+        int IStateHash.stateHash()
+        {
 
-        //    // log.debug("State hash of {}", orderBook.getClass().getSimpleName());
-        //    // log.debug("  Ask orders stream: {}", orderBook.askOrdersStream(true).collect(Collectors.toList()));
-        //    // log.debug("  Ask orders hash: {}", stateHashStream(orderBook.askOrdersStream(true)));
-        //    // log.debug("  Bid orders stream: {}", orderBook.bidOrdersStream(true).collect(Collectors.toList()));
-        //    // log.debug("  Bid orders hash: {}", stateHashStream(orderBook.bidOrdersStream(true)));
-        //    // log.debug("  getSymbolSpec: {}", orderBook.getSymbolSpec());
-        //    // log.debug("  getSymbolSpec hash: {}", orderBook.getSymbolSpec().stateHash());
+            // log.debug("State hash of {}", orderBook.getClass().getSimpleName());
+            // log.debug("  Ask orders stream: {}", orderBook.askOrdersStream(true).collect(Collectors.toList()));
+            // log.debug("  Ask orders hash: {}", stateHashStream(orderBook.askOrdersStream(true)));
+            // log.debug("  Bid orders stream: {}", orderBook.bidOrdersStream(true).collect(Collectors.toList()));
+            // log.debug("  Bid orders hash: {}", stateHashStream(orderBook.bidOrdersStream(true)));
+            // log.debug("  getSymbolSpec: {}", orderBook.getSymbolSpec());
+            // log.debug("  getSymbolSpec hash: {}", orderBook.getSymbolSpec().stateHash());
 
-        //    return Objects.hash(
-        //            HashingUtils.stateHashStream(askOrdersStream(true)),
-        //            HashingUtils.stateHashStream(bidOrdersStream(true)),
-        //            getSymbolSpec().stateHash());
-        //}
+            return 97 * HashingUtils.stateHashStream(askOrdersStream(true)) +
+                    997 * HashingUtils.stateHashStream(bidOrdersStream(true)) +
+                    9997 * getSymbolSpec().stateHash();
+        }
 
         /**
          * Obtain current L2 Market Data snapshot
