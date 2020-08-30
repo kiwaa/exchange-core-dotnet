@@ -1,4 +1,6 @@
 ﻿using Exchange.Core.Common;
+using Exchange.Core.Utils;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Orderbook
 {
-    public sealed class OrdersBucketNaive : IComparable<OrdersBucketNaive>//, WriteBytesMarshallable
+    public sealed class OrdersBucketNaive : IComparable<OrdersBucketNaive>, IWriteBytesMarshallable
     {
         public long Price { get; }
         public long TotalVolume { get; private set; }
@@ -24,12 +26,12 @@ namespace Exchange.Core.Orderbook
             TotalVolume = 0;
         }
 
-        //public OrdersBucketNaive(BytesIn bytes)
-        //{
-        //    this.price = bytes.readLong();
-        //    this.entries = SerializationUtils.readLongMap(bytes, LinkedHashMap::new, Order::new);
-        //    this.totalVolume = bytes.readLong();
-        //}
+        public OrdersBucketNaive(IBytesIn bytes)
+        {
+            this.Price = bytes.readLong();
+            this.entries = SerializationUtils.readLongMap(bytes, () => new Dictionary<long, Order>(), bytesIn => new Order(bytesIn));
+            this.TotalVolume = bytes.readLong();
+        }
 
         /**
          * Put a new order into bucket

@@ -5,12 +5,22 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="Disruptor" Version="3.6.2" />
     <PackageReference Include="log4net" Version="2.0.9" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Exchange.Core.Collections\Exchange.Core.Collections.csproj" />
+    <ProjectReference Include="..\OpenHFT.Chronicle.WireMock\OpenHFT.Chronicle.WireMock.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,10 +38,20 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Common.tt</DependentUpon>
     </Compile>
+    <Compile Update="Common\Config\Config.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Config.tt</DependentUpon>
+    </Compile>
     <Compile Update="Orderbook\OrderBook.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>OrderBook.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Processors\Processors.cs">
+      <DependentUpon>Processors.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
   </ItemGroup>
 
@@ -44,8 +64,16 @@
       <LastGenOutput>Common.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
+    <None Update="Common\Config\Config.tt">
+      <LastGenOutput>Config.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
     <None Update="Orderbook\OrderBook.tt">
       <LastGenOutput>OrderBook.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Processors\Processors.tt">
+      <LastGenOutput>Processors.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
   </ItemGroup>

@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Exchange.Core.Tests.Examples
+namespace Exchange.Core.Common.Api.Reports
 {
-    internal class SingleUserReportResult : ReportResult
+    internal class SingleUserReportResult : IReportResult
     {
         internal string getAccounts()
         {

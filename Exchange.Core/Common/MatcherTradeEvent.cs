@@ -13,6 +13,19 @@ namespace Exchange.Core.Common
 
         }
 
+        public static MatcherTradeEvent createEventChain(int chainLength)
+        {
+            MatcherTradeEvent head = new MatcherTradeEvent();
+            MatcherTradeEvent prev = head;
+            for (int j = 1; j < chainLength; j++)
+            {
+                MatcherTradeEvent nextEvent = new MatcherTradeEvent();
+                prev.NextEvent = nextEvent;
+                prev = nextEvent;
+            }
+            return head;
+        }
+
         // testing only
         public static List<MatcherTradeEvent> asList(MatcherTradeEvent next)
         {
@@ -24,5 +37,17 @@ namespace Exchange.Core.Common
             }
             return list;
         }
+
+        // testing only
+        public MatcherTradeEvent findTail()
+        {
+            MatcherTradeEvent tail = this;
+            while (tail.NextEvent != null)
+            {
+                tail = tail.NextEvent;
+            }
+            return tail;
+        }
+
     }
 }

@@ -4,6 +4,7 @@ using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Common.Config;
 using log4net;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,28 +56,28 @@ namespace Exchange.Core.Orderbook
             this.logDebug = loggingCfg.LoggingLevels.HasFlag(LoggingLevel.LOGGING_MATCHING_DEBUG);
         }
 
-        //public OrderBookDirectImpl(final BytesIn bytes,
-        //                           final ObjectsPool objectsPool,
-        //                           final OrderBookEventsHelper eventsHelper,
-        //                           final LoggingConfiguration loggingCfg)
-        //{
+        public OrderBookDirectImpl(IBytesIn bytes,
+                                   ObjectsPool objectsPool,
+                                   OrderBookEventsHelper eventsHelper,
+                                   LoggingConfiguration loggingCfg)
+        {
 
-        //    this.symbolSpec = new CoreSymbolSpecification(bytes);
-        //    this.objectsPool = objectsPool;
-        //    this.askPriceBuckets = new LongAdaptiveRadixTreeMap<>(objectsPool);
-        //    this.bidPriceBuckets = new LongAdaptiveRadixTreeMap<>(objectsPool);
-        //    this.eventsHelper = eventsHelper;
-        //    this.orderIdIndex = new LongAdaptiveRadixTreeMap<>(objectsPool);
-        //    this.logDebug = loggingCfg.getLoggingLevels().contains(LoggingConfiguration.LoggingLevel.LOGGING_MATCHING_DEBUG);
+            this.symbolSpec = new CoreSymbolSpecification(bytes);
+            this.objectsPool = objectsPool;
+            this.askPriceBuckets = new LongAdaptiveRadixTreeMap<Bucket>(objectsPool);
+            this.bidPriceBuckets = new LongAdaptiveRadixTreeMap<Bucket>(objectsPool);
+            this.eventsHelper = eventsHelper;
+            this.orderIdIndex = new LongAdaptiveRadixTreeMap<DirectOrder>(objectsPool);
+            this.logDebug = loggingCfg.LoggingLevels.HasFlag(LoggingLevel.LOGGING_MATCHING_DEBUG);
 
-        //    final int size = bytes.readInt();
-        //    for (int i = 0; i < size; i++)
-        //    {
-        //        DirectOrder order = new DirectOrder(bytes);
-        //        insertOrder(order, null);
-        //        orderIdIndex.put(order.orderId, order);
-        //    }
-        //}
+            int size = bytes.readInt();
+            for (int i = 0; i < size; i++)
+            {
+                DirectOrder order = new DirectOrder(bytes);
+                insertOrder(order, null);
+                orderIdIndex.put(order.OrderId, order);
+            }
+        }
 
         public void newOrder(OrderCommand cmd)
         {

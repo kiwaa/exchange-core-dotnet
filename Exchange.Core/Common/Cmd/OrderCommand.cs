@@ -1,7 +1,10 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
+using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading;
 
 namespace Exchange.Core
 {
@@ -12,7 +15,9 @@ namespace Exchange.Core
             return new OrderCommandBuilder();
         }
 
-        public OrderCommandType Command { get; }
+        private CommandResultCode _resultCode;
+        private MatcherTradeEvent _matcherEvent;
+        public OrderCommandType Command { get; set; }
         public long OrderId { get; set; }
 
         public int Symbol { get; set; }
@@ -35,13 +40,22 @@ namespace Exchange.Core
         public int UserCookie { get; }
         // filled by grouping processor:
 
-        public long eventsGroup { get; }
-        public int serviceFlags { get; }
+        public long eventsGroup { get; set; }
+        public int serviceFlags { get; set; }
 
         // result code of command execution - can also be used for saving intermediate state
-        public CommandResultCode ResultCode { get; set; }
+        public CommandResultCode ResultCode
+        {
+            get { return _resultCode; }
+            set { _resultCode = value; }
+        }
+
         // trade events chain
-        public MatcherTradeEvent MatcherEvent { get; set; }
+        public MatcherTradeEvent MatcherEvent
+        {
+            get { return _matcherEvent; }
+            set { _matcherEvent = value; }
+        }
         // optional market data
         public L2MarketData MarketData { get; set; }
 
@@ -152,6 +166,40 @@ namespace Exchange.Core
         {
             throw new InvalidOperationException("Command does not represents state");
         }
+
+        internal void SetResultVolatile(CommandResultCode codeToSet, CommandResultCode failureCode)
+        {
+            CommandResultCode currentCode;
+            do
+            {
+                // read current code
+                //currentCode = (CommandResultCode)UNSAFE.getObjectVolatile(cmd, OFFSET_RESULT_CODE);
+                currentCode = _resultCode;
+
+                // finish if desired code was already set
+                // or if someone has set failure
+                if (currentCode == codeToSet || currentCode == failureCode)
+                {
+                    break;
+                }
+
+                // do a CAS operation
+                //} while (!UNSAFE.compareAndSwapObject(cmd, OFFSET_RESULT_CODE, currentCode, codeToSet));
+            } while (UnsafeUtils.CompareExchange(ref _resultCode, currentCode, codeToSet) != codeToSet);
+        }
+
+        internal void AppendEventsVolatile(MatcherTradeEvent eventHead, MatcherTradeEvent tail)
+        {
+            do
+            {
+                // read current head and attach to the tail of new
+                tail.NextEvent = MatcherEvent;
+
+                // do a CAS operation
+            } while (Interlocked.CompareExchange(ref _matcherEvent, tail.NextEvent, eventHead) != eventHead);
+
+        }
+
 
         public class OrderCommandBuilder
         {

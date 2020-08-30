@@ -1,4 +1,5 @@
 ﻿using Exchange.Core.Common;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Orderbook
 {
-    public partial class DirectOrder : IOrder //: WriteBytesMarshallable
+    public partial class DirectOrder : IOrder, IWriteBytesMarshallable
     {
 
         // public int userCookie;
@@ -17,22 +18,22 @@ namespace Exchange.Core.Orderbook
 
         }
 
-        //public DirectOrder(BytesIn bytes)
-        //{
+        public DirectOrder(IBytesIn bytes)
+        {
 
 
-        //    this.orderId = bytes.readLong(); // orderId
-        //    this.price = bytes.readLong();  // price
-        //    this.size = bytes.readLong(); // size
-        //    this.filled = bytes.readLong(); // filled
-        //    this.reserveBidPrice = bytes.readLong(); // price2
-        //    this.action = OrderAction.of(bytes.readByte());
-        //    this.uid = bytes.readLong(); // uid
-        //    this.timestamp = bytes.readLong(); // timestamp
-        //                                       // this.userCookie = bytes.readInt();  // userCookie
+            this.OrderId = bytes.readLong(); // orderId
+            this.Price = bytes.readLong();  // price
+            this.Size = bytes.readLong(); // size
+            this.Filled = bytes.readLong(); // filled
+            this.ReserveBidPrice = bytes.readLong(); // price2
+            this.Action = (OrderAction)bytes.readByte();
+            this.Uid = bytes.readLong(); // uid
+            this.Timestamp = bytes.readLong(); // timestamp
+                                               // this.userCookie = bytes.readInt();  // userCookie
 
-        //    // TODO
-        //}
+            // TODO
+        }
 
         //@Override
         //    public void writeMarshallable(BytesOut bytes)

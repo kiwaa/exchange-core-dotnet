@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Common.Api.Binary
 {
-    public interface BinaryDataCommand //: WriteBytesMarshallable
+    public enum BinaryCommandType
     {
-        int getBinaryCommandTypeCode();
 
+        ADD_ACCOUNTS = 1002,
+        ADD_SYMBOLS = 1003
     }
 }

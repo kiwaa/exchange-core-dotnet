@@ -1,0 +1,29 @@
+﻿PerformanceConfiguration :
+    int ringBufferSize
+    int matchingEnginesNum
+    int riskEnginesNum
+    int msgsInGroupLimit
+    int maxGroupDurationNs
+    TaskScheduler taskScheduler
+    CoreWaitStrategy waitStrategy
+    Func<CoreSymbolSpecification,ObjectsPool,OrderBookEventsHelper,LoggingConfiguration,IOrderBook> orderBookFactory
+    Func<LZ4Compressor> binaryCommandsLz4CompressorFactory
+
+SerializationConfiguration :
+    bool enableJournaling
+    Func<ExchangeConfiguration,ISerializationProcessor> serializationProcessorFactory
+
+InitialStateConfiguration :
+    string exchangeId
+    long snapshotId
+    long snapshotBaseSeq
+    long journalTimestampNs
+
+OrdersProcessingConfiguration :
+    RiskProcessingMode riskProcessingMode
+    MarginTradingMode marginTradingMode
+
+ReportsQueriesConfiguration :
+    Dictionary<int,Func<IBytesIn,object>> reportConstructors
+    Dictionary<int,Func<IBytesIn,IBinaryDataCommand>> binaryCommandConstructors
+

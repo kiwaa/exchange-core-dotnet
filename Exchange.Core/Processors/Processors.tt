@@ -1,0 +1,137 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="System.Runtime" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using Exchange.Core.Orderbook;
+using System;
+using System.Collections.Generic;
+
+namespace Exchange.Core.Processors
+{
+<# 
+	PushIndent("    ");
+	var path = Host.ResolvePath("ProcessorsTypes.txt");
+	using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+    using (var sr = new StreamReader(fs, Encoding.UTF8))
+	{
+		string line = String.Empty;
+		string className = null;
+		Dictionary<string, string> properties = new Dictionary<string, string>();
+		while ((line = sr.ReadLine()) != null)
+		{
+			if (line.Contains(":"))
+			{
+				className = line.Split(new [] {':'})[0].Trim();
+			}
+			else if (line != string.Empty)
+			{
+				var tmp = line.Trim().Split(new [] {' '});
+				properties.Add(tmp[1], tmp[0]);
+			}
+			else
+			{
+				// class
+				WriteLine("public sealed partial class " + className + " : IEquatable<" + className + ">");
+				WriteLine("{");
+				PushIndent("    ");
+
+				// properties
+				foreach (var pair in properties)
+				{
+					var propertyName = pair.Key.First().ToString().ToUpper() + pair.Key.Substring(1);
+					WriteLine("public " + pair.Value + " " + propertyName  + " { get; set; }");
+				}
+
+				// .ctor
+				var ctor = string.Join(", ", properties.Select(x => x.Value + " " + x.Key));
+				WriteLine("public " + className + "(" + ctor + ")");
+				WriteLine("{");
+				PushIndent("    ");
+				foreach (var pair in properties)
+				{
+					var propertyName = pair.Key.First().ToString().ToUpper() + pair.Key.Substring(1);
+					WriteLine(propertyName  + " = " + pair.Key + ";");
+				}
+				PopIndent();
+				WriteLine("}");
+				WriteLine("");
+
+				// Equals
+				WriteLine("public bool Equals(" + className + " other)");
+				WriteLine("{");
+				PushIndent("    ");
+				var equals = string.Join(" && ", properties.Select(x => 
+				{
+					var propertyName = x.Key.First().ToString().ToUpper() + x.Key.Substring(1);
+					return propertyName + ".Equals(other." + propertyName + ")";
+				}));
+				WriteLine("  return " + equals + ";");
+				PopIndent();
+				WriteLine("}");
+				WriteLine("");
+
+				// Builder()
+				var builderClassName = className + "Builder";
+				WriteLine("public static " + builderClassName + " Builder()");
+				WriteLine("{");
+				PushIndent("    ");
+				WriteLine("  return new " + builderClassName + "();");
+				PopIndent();
+				WriteLine("}");
+				WriteLine("");
+
+				// nested Builder class
+				WriteLine("public sealed class " + builderClassName);
+				WriteLine("{");
+				PushIndent("    ");
+				//// nested Builder fields
+				foreach (var pair in properties)
+				{
+					WriteLine("private " + pair.Value + " _" + pair.Key  + ";");
+				}
+				WriteLine("");
+				//// nested Builder methods
+				foreach (var pair in properties)
+				{
+					WriteLine("public " + builderClassName + " " + pair.Key  + "(" + pair.Value + " value)");
+					WriteLine("{");
+					PushIndent("    ");
+					WriteLine("_" + pair.Key + " = value;");
+					WriteLine("return this;");
+					PopIndent();
+					WriteLine("}");
+				}
+				WriteLine("");
+
+				//// nested Builder build()
+				WriteLine("public " + className + " build()");
+				WriteLine("{");
+				PushIndent("    ");
+				var parms = string.Join(", ", properties.Select(x => "_" + x.Key));
+				WriteLine("return new " + className + "(" + parms + ");");
+				PopIndent();
+				WriteLine("}");
+
+				PopIndent();
+				WriteLine("}");
+
+
+				PopIndent();
+				WriteLine("}");
+
+				className = null;
+				properties = new Dictionary<string, string>();
+			}
+		}
+	}
+	PopIndent();
+
+#>
+}
+
+
+				

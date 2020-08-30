@@ -1,7 +1,9 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Common.Config;
+using Exchange.Core.Utils;
 using log4net;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -61,21 +63,23 @@ namespace Exchange.Core.Orderbook
             this.logDebug = loggingCfg.LoggingLevels.HasFlag(LoggingLevel.LOGGING_MATCHING_DEBUG);
         }
 
-        //public OrderBookNaiveImpl(final BytesIn bytes, final LoggingConfiguration loggingCfg)
-        //{
-        //    this.symbolSpec = new CoreSymbolSpecification(bytes);
-        //    this.askBuckets = SerializationUtils.readLongMap(bytes, TreeMap::new, OrdersBucketNaive::new);
-        //    this.bidBuckets = SerializationUtils.readLongMap(bytes, ()-> new TreeMap<>(Collections.reverseOrder()), OrdersBucketNaive::new);
+        public OrderBookNaiveImpl(IBytesIn bytes, LoggingConfiguration loggingCfg)
+        {
+            this.symbolSpec = new CoreSymbolSpecification(bytes);
+            this.askBuckets = SerializationUtils.readLongMap(bytes, () => new SortedDictionary<long, OrdersBucketNaive>(), bytesIn => new OrdersBucketNaive(bytesIn));
+            this.bidBuckets = SerializationUtils.readLongMap(bytes, () => new SortedDictionary<long, OrdersBucketNaive>(LongReverseComparer.Instance), bytesIn => new OrdersBucketNaive(bytesIn));
 
-        //    this.eventsHelper = OrderBookEventsHelper.NON_POOLED_EVENTS_HELPER;
-        //    // reconstruct ordersId-> Order cache
-        //    // TODO check resulting performance
-        //    askBuckets.values().forEach(bucket->bucket.forEachOrder(order->idMap.put(order.orderId, order)));
-        //    bidBuckets.values().forEach(bucket->bucket.forEachOrder(order->idMap.put(order.orderId, order)));
+            this.eventsHelper = OrderBookEventsHelper.NON_POOLED_EVENTS_HELPER;
+            // reconstruct ordersId-> Order cache
+            // TODO check resulting performance
+            foreach (var bucket in askBuckets.Values)
+                bucket.forEachOrder(order=>idMap[order.OrderId] = order);
+            foreach (var bucket in bidBuckets.Values)
+                bucket.forEachOrder(order => idMap[order.OrderId] = order);
 
-        //    this.logDebug = loggingCfg.getLoggingLevels().contains(LoggingConfiguration.LoggingLevel.LOGGING_MATCHING_DEBUG);
-        //    //validateInternalState();
-        //}
+            this.logDebug = loggingCfg.LoggingLevels.HasFlag(LoggingLevel.LOGGING_MATCHING_DEBUG);
+            //validateInternalState();
+        }
 
         public void newOrder(OrderCommand cmd)
         {

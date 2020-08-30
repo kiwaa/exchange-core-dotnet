@@ -1,5 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Tests.Examples;
+using Exchange.Core.Utils;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,47 +103,47 @@ namespace Exchange.Core.Orderbook
             cmd.MatcherEvent = evnt;
         }
 
-        //public MatcherTradeEvent createBinaryEventsChain(long timestamp,
-        //                                                 int section,
-        //                                                 NativeBytes<Void> bytes)
-        //{
+        public MatcherTradeEvent createBinaryEventsChain(long timestamp,
+                                                         int section,
+                                                         NativeBytes<byte> bytes)
+        {
 
-        //    long[] dataArray = SerializationUtils.bytesToLongArray(bytes, 5);
+            long[] dataArray = SerializationUtils.bytesToLongArray(bytes, 5);
 
-        //    MatcherTradeEvent firstEvent = null;
-        //    MatcherTradeEvent lastEvent = null;
-        //    for (int i = 0; i < dataArray.length; i += 5)
-        //    {
+            MatcherTradeEvent firstEvent = null;
+            MatcherTradeEvent lastEvent = null;
+            for (int i = 0; i < dataArray.Length; i += 5)
+            {
 
-        //        MatcherTradeEvent evnt = newMatcherEvent();
+                MatcherTradeEvent evnt = newMatcherEvent();
 
-        //        evnt.EventType = MatcherEventType.BINARY_EVENT;
+                evnt.EventType = MatcherEventType.BINARY_EVENT;
 
-        //        evnt.Section = section;
-        //        evnt.MatchedOrderId = dataArray[i];
-        //        evnt.MatchedOrderUid = dataArray[i + 1];
-        //        evnt.Price = dataArray[i + 2];
-        //        evnt.Size = dataArray[i + 3];
-        //        evnt.BidderHoldPrice = dataArray[i + 4];
+                evnt.Section = section;
+                evnt.MatchedOrderId = dataArray[i];
+                evnt.MatchedOrderUid = dataArray[i + 1];
+                evnt.Price = dataArray[i + 2];
+                evnt.Size = dataArray[i + 3];
+                evnt.BidderHoldPrice = dataArray[i + 4];
 
-        //        evnt.NextEvent = null;
+                evnt.NextEvent = null;
 
-        //        //            log.debug("BIN EVENT: {}", event);
+                //            log.debug("BIN EVENT: {}", event);
 
-        //        // attach in direct order
-        //        if (firstEvent == null)
-        //        {
-        //            firstEvent = evnt;
-        //        }
-        //        else
-        //        {
-        //            lastEvent.NextEvent = evnt;
-        //        }
-        //        lastEvent = evnt;
-        //    }
+                // attach in direct order
+                if (firstEvent == null)
+                {
+                    firstEvent = evnt;
+                }
+                else
+                {
+                    lastEvent.NextEvent = evnt;
+                }
+                lastEvent = evnt;
+            }
 
-        //    return firstEvent;
-        //}
+            return firstEvent;
+        }
 
 
         //public static NavigableMap<Integer, Wire> deserializeEvents(final OrderCommand cmd)

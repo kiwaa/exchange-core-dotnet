@@ -3,6 +3,7 @@ using Exchange.Core.Common.Api;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Common.Config;
 using Exchange.Core.Orderbook;
+using Exchange.Core.Utils;
 using log4net;
 using System;
 using System.Collections.Generic;
@@ -28,94 +29,94 @@ namespace Exchange.Core.Tests.Utils
         // TODO allow limiting number of opened positions (currently it just grows)
         // TODO use longs for prices (optionally)
 
-        //public static MultiSymbolGenResult generateMultipleSymbols(TestOrdersGeneratorConfig config)
-        //{
+        public static MultiSymbolGenResult generateMultipleSymbols(TestOrdersGeneratorConfig config)
+        {
 
-        //    List<CoreSymbolSpecification> coreSymbolSpecifications = config.CoreSymbolSpecifications;
-        //    int totalTransactionsNumber = config.TotalTransactionsNumber;
-        //    List<BitSet> usersAccounts = config.UsersAccounts;
-        //    int targetOrderBookOrdersTotal = config.TargetOrderBookOrdersTotal;
-        //    int seed = config.Seed;
+            List<CoreSymbolSpecification> coreSymbolSpecifications = config.CoreSymbolSpecifications;
+            int totalTransactionsNumber = config.TotalTransactionsNumber;
+            List<BitSet> usersAccounts = config.UsersAccounts;
+            int targetOrderBookOrdersTotal = config.TargetOrderBookOrdersTotal;
+            int seed = config.Seed;
 
-        //    Dictionary<int, GenResult> genResults = new Dictionary<int, GenResult>();
+            Dictionary<int, GenResult> genResults = new Dictionary<int, GenResult>();
 
-        //    using (ExecutionTime ignore = new ExecutionTime(t => log.Debug($"All test commands generated in {t}")))
-        //    {
+            using (ExecutionTime ignore = new ExecutionTime(t => log.Debug($"All test commands generated in {t}")))
+            {
 
-        //        double[] distribution = createWeightedDistribution(coreSymbolSpecifications.Count, seed);
-        //        int quotaLeft = totalTransactionsNumber;
-        //        Dictionary<int, Task<GenResult>> futures = new Dictionary<int, Task<GenResult>>();
+                double[] distribution = createWeightedDistribution(coreSymbolSpecifications.Count, seed);
+                int quotaLeft = totalTransactionsNumber;
+                Dictionary<int, Task<GenResult>> futures = new Dictionary<int, Task<GenResult>>();
 
-        //        Action<long> sharedProgressLogger = createAsyncProgressLogger(totalTransactionsNumber + targetOrderBookOrdersTotal);
+                Action<long> sharedProgressLogger = createAsyncProgressLogger(totalTransactionsNumber + targetOrderBookOrdersTotal);
 
-        //        for (int i = coreSymbolSpecifications.Count - 1; i >= 0; i--)
-        //        {
-        //            CoreSymbolSpecification spec = coreSymbolSpecifications[i];
-        //            int orderBookSizeTarget = (int)(targetOrderBookOrdersTotal * distribution[i] + 0.5);
-        //            int commandsNum = (i != 0) ? (int)(totalTransactionsNumber * distribution[i] + 0.5) : Math.Max(quotaLeft, 1);
-        //            quotaLeft -= commandsNum;
-        //            //                log.debug("{}. Generating symbol {} : commands={} orderBookSizeTarget={} (quotaLeft={})", i, spec.symbolId, commandsNum, orderBookSizeTarget, quotaLeft);
+                for (int i = coreSymbolSpecifications.Count - 1; i >= 0; i--)
+                {
+                    CoreSymbolSpecification spec = coreSymbolSpecifications[i];
+                    int orderBookSizeTarget = (int)(targetOrderBookOrdersTotal * distribution[i] + 0.5);
+                    int commandsNum = (i != 0) ? (int)(totalTransactionsNumber * distribution[i] + 0.5) : Math.Max(quotaLeft, 1);
+                    quotaLeft -= commandsNum;
+                    //                log.debug("{}. Generating symbol {} : commands={} orderBookSizeTarget={} (quotaLeft={})", i, spec.symbolId, commandsNum, orderBookSizeTarget, quotaLeft);
 
-        //            int[] uidsAvailableForSymbol = UserCurrencyAccountsGenerator.createUserListForSymbol(usersAccounts, spec, commandsNum);
-        //            int numUsers = uidsAvailableForSymbol.Length;
-        //            Func<int, int> uidMapper = idx => uidsAvailableForSymbol[idx];
-        //            var symbolFuture = generateCommands(commandsNum, orderBookSizeTarget, numUsers, uidMapper, spec.SymbolId, false, config.AvalancheIOC, sharedProgressLogger, seed);
+                    int[] uidsAvailableForSymbol = UserCurrencyAccountsGenerator.createUserListForSymbol(usersAccounts, spec, commandsNum);
+                    int numUsers = uidsAvailableForSymbol.Length;
+                    Func<int, int> uidMapper = idx => uidsAvailableForSymbol[idx];
+                    var symbolFuture = generateCommands(commandsNum, orderBookSizeTarget, numUsers, uidMapper, spec.SymbolId, false, config.AvalancheIOC, sharedProgressLogger, seed);
 
-        //            futures[spec.SymbolId] = Task.FromResult(symbolFuture);
-        //        }
+                    futures[spec.SymbolId] = Task.FromResult(symbolFuture);
+                }
 
-        //        foreach (var pair in futures)
-        //        {
-        //            try
-        //            {
-        //                genResults[pair.Key] = pair.Value.Result;
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                throw new InvalidOperationException("Exception while generating commands for symbol " + pair.Key, ex);
-        //            }
-        //        }
-        //    }
+                foreach (var pair in futures)
+                {
+                    try
+                    {
+                        genResults[pair.Key] = pair.Value.Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException("Exception while generating commands for symbol " + pair.Key, ex);
+                    }
+                }
+            }
 
-        //    int benchmarkCmdSize = genResults.Values.Select(genResult => genResult.CommandsBenchmark.Count).Sum();
+            int benchmarkCmdSize = genResults.Values.Select(genResult => genResult.CommandsBenchmark.Count).Sum();
 
-        //    Task<List<ApiCommand>> apiCommandsFill = mergeCommands(genResults, config.Seed, false, Task.FromResult((List<ApiCommand>)null));
-        //    Task<List<ApiCommand>> apiCommandsBenchmark = mergeCommands(genResults, config.Seed, true, apiCommandsFill);
+            Task<List<ApiCommand>> apiCommandsFill = mergeCommands(genResults, config.Seed, false, Task.FromResult((List<ApiCommand>)null));
+            Task<List<ApiCommand>> apiCommandsBenchmark = mergeCommands(genResults, config.Seed, true, apiCommandsFill);
 
-        //    return MultiSymbolGenResult.Builder()
-        //            .genResults(genResults)
-        //            .apiCommandsFill(apiCommandsFill)
-        //            .apiCommandsBenchmark(apiCommandsBenchmark)
-        //            .benchmarkCommandsSize(benchmarkCmdSize)
-        //            .build();
+            return MultiSymbolGenResult.Builder()
+                    .genResults(genResults)
+                    .apiCommandsFill(apiCommandsFill)
+                    .apiCommandsBenchmark(apiCommandsBenchmark)
+                    .benchmarkCommandsSize(benchmarkCmdSize)
+                    .build();
 
-        //}
+        }
 
-        //private static Task<List<ApiCommand>> mergeCommands(
-        //        Dictionary<int, GenResult> genResults,
-        //        long seed,
-        //        bool takeBenchmark,
-        //        Task<List<ApiCommand>> runAfterThis)
-        //{
+        private static Task<List<ApiCommand>> mergeCommands(
+                Dictionary<int, GenResult> genResults,
+                long seed,
+                bool takeBenchmark,
+                Task<List<ApiCommand>> runAfterThis)
+        {
 
-        //    List<List<OrderCommand>> commandsLists = genResults.Values
-        //            .Select(genResult => takeBenchmark ? genResult.CommandsBenchmark : genResult.CommandsFill)
-        //            .ToList();
+            List<List<OrderCommand>> commandsLists = genResults.Values
+                    .Select(genResult => takeBenchmark ? genResult.CommandsBenchmark : genResult.CommandsFill)
+                    .ToList();
 
-        //    var tmp = takeBenchmark ? "benchmark" : "preFill";
-        //    log.Debug($"Merging {commandsLists.Select(x => x.Count).Sum()} commands for {genResults.Count} symbols ({tmp})...");
+            var tmp = takeBenchmark ? "benchmark" : "preFill";
+            log.Debug($"Merging {commandsLists.Select(x => x.Count).Sum()} commands for {genResults.Count} symbols ({tmp})...");
 
-        //    List<OrderCommand> merged = RandomCollectionsMerger.mergeCollections(commandsLists, seed);
+            List<OrderCommand> merged = RandomCollectionsMerger.mergeCollections(commandsLists, seed);
 
-        //    Task<List<ApiCommand>> resultFuture = runAfterThis.thenApplyAsync(ignore => TestOrdersGenerator.convertToApiCommand(merged));
+            Task<List<ApiCommand>> resultFuture = runAfterThis.ContinueWith(ignore => TestOrdersGenerator.convertToApiCommand(merged));
 
-        //    if (takeBenchmark)
-        //    {
-        //        resultFuture.thenRunAsync(() => printStatistics(merged));
-        //    }
+            if (takeBenchmark)
+            {
+                resultFuture.ContinueWith(_ => printStatistics(merged));
+            }
 
-        //    return resultFuture;
-        //}
+            return resultFuture;
+        }
 
         public static double[] createWeightedDistribution(int size, int seed)
         {
@@ -413,7 +414,7 @@ namespace Exchange.Core.Tests.Utils
             int size = Math.Min(session.orderUids.Count, 512);
 
             int randPos = rand.Next(size);
-            IEnumerator<KeyValuePair<int,int>> iterator = session.orderUids.GetEnumerator();
+            IEnumerator<KeyValuePair<int, int>> iterator = session.orderUids.GetEnumerator();
 
             iterator.MoveNext();
             for (int i = 0; i < randPos; i++)
@@ -656,67 +657,85 @@ namespace Exchange.Core.Tests.Utils
             }
         }
 
-        //private static void printStatistics(List<OrderCommand> allCommands)
-        //{
-        //    int counterPlaceIOC = 0;
-        //    int counterPlaceGTC = 0;
-        //    int counterPlaceFOKB = 0;
-        //    int counterCancel = 0;
-        //    int counterMove = 0;
-        //    int counterReduce = 0;
-        //    Dictionary<int, int> symbolCounters = new Dictionary<int, int>();
+        private static void printStatistics(List<OrderCommand> allCommands)
+        {
+            int counterPlaceIOC = 0;
+            int counterPlaceGTC = 0;
+            int counterPlaceFOKB = 0;
+            int counterCancel = 0;
+            int counterMove = 0;
+            int counterReduce = 0;
+            Dictionary<int, int> symbolCounters = new Dictionary<int, int>();
 
-        //    foreach (OrderCommand cmd in allCommands)
-        //    {
-        //        switch (cmd.Command)
-        //        {
-        //            case OrderCommandType.MOVE_ORDER:
-        //                counterMove++;
-        //                break;
+            foreach (OrderCommand cmd in allCommands)
+            {
+                switch (cmd.Command)
+                {
+                    case OrderCommandType.MOVE_ORDER:
+                        counterMove++;
+                        break;
 
-        //            case OrderCommandType.CANCEL_ORDER:
-        //                counterCancel++;
-        //                break;
+                    case OrderCommandType.CANCEL_ORDER:
+                        counterCancel++;
+                        break;
 
-        //            case OrderCommandType.REDUCE_ORDER:
-        //                counterReduce++;
-        //                break;
+                    case OrderCommandType.REDUCE_ORDER:
+                        counterReduce++;
+                        break;
 
-        //            case OrderCommandType.PLACE_ORDER:
-        //                if (cmd.OrderType == OrderType.IOC)
-        //                {
-        //                    counterPlaceIOC++;
-        //                }
-        //                else if (cmd.OrderType == OrderType.GTC)
-        //                {
-        //                    counterPlaceGTC++;
-        //                }
-        //                else if (cmd.OrderType == OrderType.FOK_BUDGET)
-        //                {
-        //                    counterPlaceFOKB++;
-        //                }
-        //                break;
-        //        }
-        //        //symbolCounters.addToValue(cmd.Symbol, 1);
-        //        AddToValue(symbolCounters, cmd.Symbol, 1);
-        //    }
+                    case OrderCommandType.PLACE_ORDER:
+                        if (cmd.OrderType == OrderType.IOC)
+                        {
+                            counterPlaceIOC++;
+                        }
+                        else if (cmd.OrderType == OrderType.GTC)
+                        {
+                            counterPlaceGTC++;
+                        }
+                        else if (cmd.OrderType == OrderType.FOK_BUDGET)
+                        {
+                            counterPlaceFOKB++;
+                        }
+                        break;
+                }
+                //symbolCounters.addToValue(cmd.Symbol, 1);
+                AddToValue(symbolCounters, cmd.Symbol, 1);
+            }
 
-        //    int commandsListSize = allCommands.Count;
-        //    IntSummaryStatistics symbolStat = symbolCounters.summaryStatistics();
+            int commandsListSize = allCommands.Count;
+            //IntSummaryStatistics symbolStat = symbolCounters.summaryStatistics();
+            // https://stackoverflow.com/questions/52026650/does-c-sharp-linq-have-something-similar-to-summarystatistics
+            var symbolStat = symbolCounters.Values.Aggregate(
+                    seed: (
+                        count: 0,
+                        sum: 0,
+                        min: int.MaxValue,
+                        max: int.MinValue),
+                    func: (acc, x) => (
+                        count: acc.count + 1,
+                        sum: acc.sum + x,
+                        min: Math.Min(acc.min, x),
+                        max: Math.Max(acc.max, x)),
+                    resultSelector: acc => (
+                        acc.count,
+                        acc.sum,
+                        acc.min,
+                        acc.max,
+                        avg: (double)acc.sum / acc.count));
 
-        //    String commandsGtc = String.Format("%.2f%%", (float)counterPlaceGTC / (float)commandsListSize * 100.0f);
-        //    String commandsIoc = String.Format("%.2f%%", (float)counterPlaceIOC / (float)commandsListSize * 100.0f);
-        //    String commandsFokb = String.Format("%.2f%%", (float)counterPlaceFOKB / (float)commandsListSize * 100.0f);
-        //    String commandsCancel = String.Format("%.2f%%", (float)counterCancel / (float)commandsListSize * 100.0f);
-        //    String commandsMove = String.Format("%.2f%%", (float)counterMove / (float)commandsListSize * 100.0f);
-        //    String commandsReduce = String.Format("%.2f%%", (float)counterReduce / (float)commandsListSize * 100.0f);
-        //    log.Info($"GTC:{commandsGtc} IOC:{commandsIoc} FOKB:{commandsFokb} cancel:{commandsCancel} move:{commandsMove} reduce:{commandsReduce}");
+            String commandsGtc = String.Format("%.2f%%", (float)counterPlaceGTC / (float)commandsListSize * 100.0f);
+            String commandsIoc = String.Format("%.2f%%", (float)counterPlaceIOC / (float)commandsListSize * 100.0f);
+            String commandsFokb = String.Format("%.2f%%", (float)counterPlaceFOKB / (float)commandsListSize * 100.0f);
+            String commandsCancel = String.Format("%.2f%%", (float)counterCancel / (float)commandsListSize * 100.0f);
+            String commandsMove = String.Format("%.2f%%", (float)counterMove / (float)commandsListSize * 100.0f);
+            String commandsReduce = String.Format("%.2f%%", (float)counterReduce / (float)commandsListSize * 100.0f);
+            log.Info($"GTC:{commandsGtc} IOC:{commandsIoc} FOKB:{commandsFokb} cancel:{commandsCancel} move:{commandsMove} reduce:{commandsReduce}");
 
-        //    String cpsMax = String.Format("%d (%.2f%%)", symbolStat.getMax(), symbolStat.getMax() * 100.0f / commandsListSize);
-        //    String cpsAvg = String.Format("%d (%.2f%%)", (int)symbolStat.getAverage(), symbolStat.getAverage() * 100.0f / commandsListSize);
-        //    String cpsMin = String.Format("%d (%.2f%%)", symbolStat.getMin(), symbolStat.getMin() * 100.0f / commandsListSize);
-        //    log.Info($"commands per symbol: max:{cpsMax}; avg:{cpsAvg}; min:{cpsMin}");
-        //}
+            String cpsMax = String.Format("%d (%.2f%%)", symbolStat.max, symbolStat.max * 100.0f / commandsListSize);
+            String cpsAvg = String.Format("%d (%.2f%%)", (int)symbolStat.avg, symbolStat.avg * 100.0f / commandsListSize);
+            String cpsMin = String.Format("%d (%.2f%%)", symbolStat.min, symbolStat.min * 100.0f / commandsListSize);
+            log.Info($"commands per symbol: max:{cpsMax}; avg:{cpsAvg}; min:{cpsMin}");
+        }
 
         private static int AddToValue(Dictionary<int, int> dict, int key, int value)
         {

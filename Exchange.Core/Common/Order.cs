@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenHFT.Chronicle.WireMock;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,23 +7,21 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Common
 {
-    public sealed partial class Order : IOrder //: WriteBytesMarshallable
+    public sealed partial class Order : IOrder, IWriteBytesMarshallable
     {
-        //public Order(BytesIn bytes)
-        //{
+        public Order(IBytesIn bytes)
+        {
+            this.OrderId = bytes.readLong(); // orderId
+            this.Price = bytes.readLong();  // price
+            this.Size = bytes.readLong(); // size
+            this.Filled = bytes.readLong(); // filled
+            this.ReserveBidPrice = bytes.readLong(); // price2
+            this.Action = (OrderAction)bytes.readByte();
+            this.Uid = bytes.readLong(); // uid
+            this.Timestamp = bytes.readLong(); // timestamp
+                                               //        this.userCookie = bytes.readInt();  // userCookie
 
-
-        //    this.orderId = bytes.readLong(); // orderId
-        //    this.price = bytes.readLong();  // price
-        //    this.size = bytes.readLong(); // size
-        //    this.filled = bytes.readLong(); // filled
-        //    this.reserveBidPrice = bytes.readLong(); // price2
-        //    this.action = OrderAction.of(bytes.readByte());
-        //    this.uid = bytes.readLong(); // uid
-        //    this.timestamp = bytes.readLong(); // timestamp
-        //                                       //        this.userCookie = bytes.readInt();  // userCookie
-
-        //}
+        }
 
         //@Override
         //public void writeMarshallable(BytesOut bytes)

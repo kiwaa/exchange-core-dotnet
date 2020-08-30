@@ -1,20 +1,22 @@
-﻿namespace Exchange.Core.Common
+﻿using OpenHFT.Chronicle.WireMock;
+
+namespace Exchange.Core.Common
 {
     public sealed partial class CoreSymbolSpecification : IStateHash
     {
-        //    public CoreSymbolSpecification(BytesIn bytes)
-        //    {
-        //        this.symbolId = bytes.readInt();
-        //        this.type = SymbolType.of(bytes.readByte());
-        //        this.baseCurrency = bytes.readInt();
-        //        this.quoteCurrency = bytes.readInt();
-        //        this.baseScaleK = bytes.readLong();
-        //        this.quoteScaleK = bytes.readLong();
-        //        this.takerFee = bytes.readLong();
-        //        this.makerFee = bytes.readLong();
-        //        this.marginBuy = bytes.readLong();
-        //        this.marginSell = bytes.readLong();
-        //    }
+        public CoreSymbolSpecification(IBytesIn bytes)
+        {
+            this.SymbolId = bytes.readInt();
+            this.Type = (SymbolType)bytes.readByte();
+            this.BaseCurrency = bytes.readInt();
+            this.QuoteCurrency = bytes.readInt();
+            this.BaseScaleK = bytes.readLong();
+            this.QuoteScaleK = bytes.readLong();
+            this.TakerFee = bytes.readLong();
+            this.MakerFee = bytes.readLong();
+            this.MarginBuy = bytes.readLong();
+            this.MarginSell = bytes.readLong();
+        }
 
         //    /* NOT SUPPORTED YET:
 

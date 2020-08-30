@@ -1,11 +1,14 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
+using Exchange.Core.Common.Config;
 using Exchange.Core.Utils;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ObjectsPool = Exchange.Core.Collections.ObjPool.NaiveObjectsPool;
 
 namespace Exchange.Core.Orderbook
 {
@@ -198,18 +201,19 @@ namespace Exchange.Core.Orderbook
 
         }
 
-        //static IOrderBook create(BytesIn bytes, ObjectsPool objectsPool, OrderBookEventsHelper eventsHelper, LoggingConfiguration loggingCfg)
-        //{
-        //    switch (OrderBookImplType.of(bytes.readByte()))
-        //    {
-        //        case NAIVE:
-        //            return new OrderBookNaiveImpl(bytes, loggingCfg);
-        //        case DIRECT:
-        //            return new OrderBookDirectImpl(bytes, objectsPool, eventsHelper, loggingCfg);
-        //        default:
-        //            throw new IllegalArgumentException();
-        //    }
-        //}
+        static IOrderBook create(IBytesIn bytes, ObjectsPool objectsPool, OrderBookEventsHelper eventsHelper, LoggingConfiguration loggingCfg)
+        {
+            var type = (OrderBookImplType)bytes.readByte();
+            switch (type)
+            {
+                case OrderBookImplType.NAIVE:
+                    return new OrderBookNaiveImpl(bytes, loggingCfg);
+                case OrderBookImplType.DIRECT:
+                    return new OrderBookDirectImpl(bytes, objectsPool, eventsHelper, loggingCfg);
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
 
         //@FunctionalInterface
         //interface OrderBookFactory

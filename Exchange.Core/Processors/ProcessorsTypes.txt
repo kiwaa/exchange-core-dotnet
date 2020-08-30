@@ -1,0 +1,13 @@
+﻿DeserializedData :
+    BinaryCommandsProcessor binaryCommandsProcessor
+    Dictionary<int,IOrderBook> orderBooks
+
+State :
+    SymbolSpecificationProvider symbolSpecificationProvider
+    UserProfileService userProfileService
+    BinaryCommandsProcessor binaryCommandsProcessor
+    Dictionary<int,LastPriceCacheRecord> lastPriceCache
+    Dictionary<int,long> fees
+    Dictionary<int,long> adjustments
+    Dictionary<int,long> suspends
+

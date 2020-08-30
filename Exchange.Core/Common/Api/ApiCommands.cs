@@ -362,8 +362,8 @@ namespace Exchange.Core.Common.Api
     public sealed partial class ApiBinaryDataCommand : ApiCommand, IEquatable<ApiBinaryDataCommand>
     {
         public int TransferId { get; }
-        public BinaryDataCommand Data { get; }
-        public ApiBinaryDataCommand(int transferId, BinaryDataCommand data)
+        public IBinaryDataCommand Data { get; }
+        public ApiBinaryDataCommand(int transferId, IBinaryDataCommand data)
         {
             TransferId = transferId;
             Data = data;
@@ -382,14 +382,14 @@ namespace Exchange.Core.Common.Api
         public sealed class ApiBinaryDataCommandBuilder
         {
             private int _transferId;
-            private BinaryDataCommand _data;
+            private IBinaryDataCommand _data;
 
             public ApiBinaryDataCommandBuilder transferId(int value)
             {
                 _transferId = value;
                 return this;
             }
-            public ApiBinaryDataCommandBuilder data(BinaryDataCommand value)
+            public ApiBinaryDataCommandBuilder data(IBinaryDataCommand value)
             {
                 _data = value;
                 return this;

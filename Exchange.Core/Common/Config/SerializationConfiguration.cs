@@ -2,35 +2,24 @@
 
 namespace Exchange.Core.Common.Config
 {
-    public class SerializationConfiguration
+    public sealed partial class SerializationConfiguration
     {
         // no serialization
-        public static readonly SerializationConfiguration DEFAULT = builder()
+        public static readonly SerializationConfiguration DEFAULT = Builder()
             .enableJournaling(false)
             .serializationProcessorFactory(cfg => DummySerializationProcessor.INSTANCE)
             .build();
 
-        private static SerializationConfigurationBuilder builder()
-        {
-            return new SerializationConfigurationBuilder();
-        }
+        // no journaling, only snapshots
+        public static SerializationConfiguration DISK_SNAPSHOT_ONLY = Builder()
+            .enableJournaling(false)
+            .serializationProcessorFactory(exchangeCfg => new DiskSerializationProcessor(exchangeCfg, DiskSerializationProcessorConfiguration.createDefaultConfig()))
+            .build();
 
-        private class SerializationConfigurationBuilder
-        {
-            internal SerializationConfigurationBuilder enableJournaling(bool v)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal SerializationConfigurationBuilder serializationProcessorFactory(Func<object, DummySerializationProcessor> iNSTANCE)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal SerializationConfiguration build()
-            {
-                throw new NotImplementedException();
-            }
-        }
+        // snapshots and journaling
+        public static SerializationConfiguration DISK_JOURNALING = Builder()
+            .enableJournaling(true)
+            .serializationProcessorFactory(exchangeCfg => new DiskSerializationProcessor(exchangeCfg, DiskSerializationProcessorConfiguration.createDefaultConfig()))
+            .build();
     }
 }
