@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Processors
 {
-    public class LastPriceCacheRecord : IStateHash //BytesMarshallable, 
+    public class LastPriceCacheRecord : IStateHash, IWriteBytesMarshallable //BytesMarshallable, 
     {
         public long askPrice = long.MaxValue;
         public long bidPrice = 0L;

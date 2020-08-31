@@ -628,13 +628,13 @@ namespace Exchange.Core.Orderbook
         }
 
 
-        //public void writeMarshallable(BytesOut bytes)
-        //{
-        //    bytes.writeByte(getImplementationType().getCode());
-        //    symbolSpec.writeMarshallable(bytes);
-        //    SerializationUtils.marshallLongMap(askBuckets, bytes);
-        //    SerializationUtils.marshallLongMap(bidBuckets, bytes);
-        //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeByte((byte)getImplementationType());
+            symbolSpec.writeMarshallable(bytes);
+            SerializationUtils.marshallLongMap(askBuckets, bytes);
+            SerializationUtils.marshallLongMap(bidBuckets, bytes);
+        }
     }
 
 }

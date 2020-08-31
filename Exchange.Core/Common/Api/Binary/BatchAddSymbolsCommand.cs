@@ -1,9 +1,11 @@
 ﻿using Exchange.Core.Common;
+using Exchange.Core.Utils;
+using OpenHFT.Chronicle.WireMock;
 using System.Collections.Generic;
 
 namespace Exchange.Core.Common.Api.Binary
 {
-    internal class BatchAddSymbolsCommand : IBinaryDataCommand
+    public class BatchAddSymbolsCommand : IBinaryDataCommand
     {
         public Dictionary<int, CoreSymbolSpecification> symbols { get; }
 
@@ -21,15 +23,15 @@ namespace Exchange.Core.Common.Api.Binary
         }
 
 
-        //public BatchAddSymbolsCommand(IBytesIn bytes)
-        //{
-        //    symbols = SerializationUtils.readIntHashMap(bytes, CoreSymbolSpecification::new);
-        //}
+        public BatchAddSymbolsCommand(IBytesIn bytes)
+        {
+            symbols = SerializationUtils.readIntHashMap(bytes, bytesIn => new CoreSymbolSpecification(bytesIn));
+        }
 
-    //public void writeMarshallable(BytesOut bytes)
-    //    {
-    //        SerializationUtils.marshallIntHashMap(symbols, bytes);
-    //    }
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            SerializationUtils.marshallIntHashMap(symbols, bytes);
+        }
 
         public int getBinaryCommandTypeCode()
         {

@@ -84,7 +84,7 @@ namespace Exchange.Core
             // creating and attaching exceptions handler
             var exceptionHandler = new DisruptorExceptionHandler("main", disruptor);
 
-            disruptor.HandleExceptionsWith(exceptionHandler);
+            disruptor.SetDefaultExceptionHandler(exceptionHandler);
 
             // advice completable future to use the same CPU socket as disruptor
             //ExecutorService loaderExecutor = Executors.newFixedThreadPool(matchingEnginesNum + riskEnginesNum, threadFactory);
@@ -92,7 +92,7 @@ namespace Exchange.Core
             // start creating matching engines
             Dictionary<int, MatchingEngineRouter> matchingEngineFutures = Enumerable.Range(0, matchingEnginesNum)
                 .ToDictionary(shardId => shardId,
-                              shardId => new MatchingEngineRouter(shardId, matchingEnginesNum, serializationProcessor, orderBookFactory, sharedPool, exchangeConfiguration)));
+                              shardId => new MatchingEngineRouter(shardId, matchingEnginesNum, serializationProcessor, orderBookFactory, sharedPool, exchangeConfiguration));
             // TODO create processors in same thread we will execute it??
 
             // start creating risk engines
@@ -144,25 +144,21 @@ namespace Exchange.Core
 
             ResultsHandler resultsHandler = new ResultsHandler(resultsConsumer);
 
-            mainHandlerGroup.HandleEventsWith((cmd, seq, eob) =>
-            {
-                resultsHandler.onEvent(cmd, seq, eob);
-                api.processResult(seq, cmd); // TODO SLOW ?(volatile operations)
-            });
+            mainHandlerGroup.HandleEventsWith(new ResultsProcessor(resultsHandler, api));
 
             // attach slave processors to master processor
             foreach (var i in Enumerable.Range(0, riskEnginesNum))
-                procR1[i].setSlaveProcessor(procR2[i]);
+                procR1[i].slaveProcessor = procR2[i];
 
-            try
-            {
-                loaderExecutor.shutdown();
-                loaderExecutor.awaitTermination(1, TimeUnit.SECONDS);
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException(ex);
-            }
+            //try
+            //{
+            //    loaderExecutor.shutdown();
+            //    loaderExecutor.awaitTermination(1, TimeUnit.SECONDS);
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new RuntimeException(ex);
+            //}
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
@@ -224,9 +220,9 @@ namespace Exchange.Core
             }
         }
 
-        private static EventHandler<OrderCommand>[] arraysAddHandler(EventHandler<OrderCommand>[] handlers, EventHandler<OrderCommand> extraHandler)
+        private static IEventHandler<OrderCommand>[] arraysAddHandler(IEventHandler<OrderCommand>[] handlers, IEventHandler<OrderCommand> extraHandler)
         {
-            EventHandler<OrderCommand>[] result = new EventHandler<OrderCommand>[handlers.Length + 1];
+            IEventHandler<OrderCommand>[] result = new IEventHandler<OrderCommand>[handlers.Length + 1];
             Array.Copy(handlers, result, handlers.Length);
             result[handlers.Length] = extraHandler;
             return result;
@@ -313,6 +309,25 @@ namespace Exchange.Core
                 serializationProcessor.writeToJournal(data, sequence, endOfBatch);
             }
         }
+
+        private class ResultsProcessor : IEventHandler<OrderCommand>
+        {
+            private ResultsHandler resultsHandler;
+            private ExchangeApi api;
+
+            public ResultsProcessor(ResultsHandler resultsHandler, ExchangeApi api)
+            {
+                this.resultsHandler = resultsHandler;
+                this.api = api;
+            }
+
+            public void OnEvent(OrderCommand cmd, long seq, bool endOfBatch)
+            {
+                resultsHandler.OnEvent(cmd, seq, endOfBatch);
+                api.processResult(seq, cmd); // TODO SLOW ?(volatile operations)
+            }
+        }
+
         private class GroupingProcessorFactory : IEventProcessorFactory<OrderCommand>
         {
             private PerformanceConfiguration perfCfg;
@@ -380,6 +395,33 @@ namespace Exchange.Core
             }
         }
 
+        public static ExchangeCoreBuilder Builder()
+        {
+            return new ExchangeCoreBuilder();
+        }
+
+        public class ExchangeCoreBuilder
+        {
+            private Action<OrderCommand, long> _resultConsumer;
+            private ExchangeConfiguration _exchangeConfiguration;
+
+            public ExchangeCore build()
+            {
+                return new ExchangeCore(_resultConsumer, _exchangeConfiguration);
+            }
+
+            public ExchangeCoreBuilder exchangeConfiguration(ExchangeConfiguration exchangeConfiguration)
+            {
+                _exchangeConfiguration = exchangeConfiguration;
+                return this;
+            }
+
+            public ExchangeCoreBuilder resultsConsumer(Action<OrderCommand, long> resultsConsumer)
+            {
+                _resultConsumer = resultsConsumer;
+                return this;
+            }
+        }
     }
 
 }

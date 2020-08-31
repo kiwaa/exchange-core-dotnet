@@ -33,6 +33,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
+    <Compile Update="Common\Api\Reports\Reports.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reports.tt</DependentUpon>
+    </Compile>
     <Compile Update="Common\Common.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -58,6 +63,10 @@
   <ItemGroup>
     <None Update="Common\Api\ApiCommands.tt">
       <LastGenOutput>ApiCommands.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Common\Api\Reports\Reports.tt">
+      <LastGenOutput>Reports.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
     <None Update="Common\Common.tt">

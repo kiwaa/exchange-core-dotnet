@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Exchange.Core.Common.Api.Reports
 {
-    internal class TotalCurrencyBalanceReportQuery : IReportQuery<TotalCurrencyBalanceReportResult>
+    public class TotalCurrencyBalanceReportQuery : IReportQuery<TotalCurrencyBalanceReportResult>
     {
         public TotalCurrencyBalanceReportQuery()
         {
@@ -26,6 +26,11 @@ namespace Exchange.Core.Common.Api.Reports
         }
 
         public TotalCurrencyBalanceReportResult process(RiskEngine riskEngine)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void writeMarshallable(IBytesOut bytes)
         {
             throw new System.NotImplementedException();
         }

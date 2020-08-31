@@ -1,5 +1,4 @@
 ﻿using Exchange.Core.Common;
-using Exchange.Core.Tests.Examples;
 using Exchange.Core.Utils;
 using OpenHFT.Chronicle.WireMock;
 using System;

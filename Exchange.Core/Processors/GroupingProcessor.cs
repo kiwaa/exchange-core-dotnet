@@ -2,6 +2,7 @@
 using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Common.Config;
+using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace Exchange.Core.Processors
         private readonly RingBuffer<OrderCommand> ringBuffer;
         private readonly ISequenceBarrier sequenceBarrier;
         private readonly WaitSpinningHelper<OrderCommand> waitSpinningHelper;
-        private ISequence Sequence { get; } = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
+        public ISequence Sequence { get; } = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 
         private readonly SharedPool sharedPool;
 
@@ -108,7 +109,7 @@ namespace Exchange.Core.Processors
             long l2dataLastNs = 0;
             bool triggerL2DataRequest = false;
 
-            int tradeEventChainLengthTarget = sharedPool.getChainLength();
+            int tradeEventChainLengthTarget = sharedPool.chainLength;
             MatcherTradeEvent tradeEventHead = null;
             MatcherTradeEvent tradeEventTail = null;
             int tradeEventCounter = 0; // counter
@@ -128,7 +129,7 @@ namespace Exchange.Core.Processors
                         while (nextSequence <= availableSequence)
                         {
 
-                            OrderCommand cmd = ringBuffer.get(nextSequence);
+                            OrderCommand cmd = ringBuffer[nextSequence];
 
                             nextSequence++;
 
@@ -176,7 +177,7 @@ namespace Exchange.Core.Processors
                             }
 
                             // cleaning attached events
-                            if (EVENTS_POOLING && cmd.MatcherEvent != null)
+                            if (ExchangeCore.EVENTS_POOLING && cmd.MatcherEvent != null)
                             {
 
                                 // update tail
@@ -227,12 +228,12 @@ namespace Exchange.Core.Processors
                         }
                         Sequence.SetValue(availableSequence);
                         waitSpinningHelper.signalAllWhenBlocking();
-                        groupLastNs = System.nanoTime() + maxGroupDurationNs;
+                        groupLastNs = NanoTime() + maxGroupDurationNs;
 
                     }
                     else
                     {
-                        long t = System.nanoTime();
+                        long t = NanoTime();
                         if (msgsInGroup > 0 && t > groupLastNs)
                         {
                             // switch group after T microseconds elapsed, if group is non empty
@@ -263,6 +264,11 @@ namespace Exchange.Core.Processors
                 }
                 }
             }
+
+        private long NanoTime()
+        {
+            return DateTime.UtcNow.Ticks * 100; // 1 tick = 100 ns
+        }
 
         public override string ToString()
             {

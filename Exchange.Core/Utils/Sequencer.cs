@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenHFT.Chronicle.WireMock
+namespace Exchange.Core.Utils
 {
-    public interface IWriteBytesMarshallable
+    class Sequencer
     {
-        void writeMarshallable(IBytesOut bytes);
+        public const long INITIAL_CURSOR_VALUE = -1L;
     }
 }

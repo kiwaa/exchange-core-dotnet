@@ -1,5 +1,6 @@
 ﻿using Disruptor;
 using Exchange.Core.Common;
+using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,7 +81,7 @@ namespace Exchange.Core.Processors
                     while (nextSequence <= availableSequence && nextSequence < processUpToSequence)
                     {
                         evnt = dataProvider[nextSequence];
-                        eventHandler.onEvent(nextSequence, evnt); // TODO check if nextSequence is correct (not nextSequence+-1)?
+                        eventHandler(nextSequence, evnt); // TODO check if nextSequence is correct (not nextSequence+-1)?
                         nextSequence++;
                     }
 

@@ -23,19 +23,18 @@ namespace Exchange.Core.Common
 
         }
 
-        //@Override
-        //public void writeMarshallable(BytesOut bytes)
-        //{
-        //    bytes.writeLong(orderId);
-        //    bytes.writeLong(price);
-        //    bytes.writeLong(size);
-        //    bytes.writeLong(filled);
-        //    bytes.writeLong(reserveBidPrice);
-        //    bytes.writeByte(action.getCode());
-        //    bytes.writeLong(uid);
-        //    bytes.writeLong(timestamp);
-        //    //        bytes.writeInt(userCookie);
-        //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeLong(OrderId);
+            bytes.writeLong(Price);
+            bytes.writeLong(Size);
+            bytes.writeLong(Filled);
+            bytes.writeLong(ReserveBidPrice);
+            bytes.writeByte((byte)Action);
+            bytes.writeLong(Uid);
+            bytes.writeLong(Timestamp);
+            //        bytes.writeInt(userCookie);
+        }
 
         public override string ToString()
         {

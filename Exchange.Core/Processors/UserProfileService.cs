@@ -1,6 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Utils;
+using log4net;
 using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace Exchange.Core.Processors
      */
     public sealed class UserProfileService : IWriteBytesMarshallable, IStateHash
     {
+        private static ILog log = LogManager.GetLogger(typeof(BinaryCommandsProcessor));
 
         /*
          * State: uid to UserProfile
@@ -41,12 +43,18 @@ namespace Exchange.Core.Processors
          */
         public UserProfile getUserProfile(long uid)
         {
-            return userProfiles.get(uid);
+            if (userProfiles.TryGetValue(uid, out UserProfile profile))
+                return profile;
+            return null;
         }
 
         public UserProfile getUserProfileOrAddSuspended(long uid)
         {
-            return userProfiles.getIfAbsentPut(uid, ()-> new UserProfile(uid, UserStatus.SUSPENDED));
+            if (userProfiles.TryGetValue(uid, out UserProfile profile))
+                return profile;
+            profile = new UserProfile(uid, UserStatus.SUSPENDED);
+            userProfiles.Add(uid, profile);
+            return profile;
         }
 
 
@@ -65,7 +73,7 @@ namespace Exchange.Core.Processors
             UserProfile userProfile = getUserProfile(uid);
             if (userProfile == null)
             {
-                log.warn("User profile {} not found", uid);
+                log.Warn($"User profile {uid} not found");
                 return CommandResultCode.AUTH_INVALID_USER;
             }
 
@@ -84,13 +92,13 @@ namespace Exchange.Core.Processors
             }
 
             // validate balance for withdrawals
-            if (amount < 0 && (userProfile.accounts.get(currency) + amount < 0))
+            if (amount < 0 && (userProfile.accounts[currency] + amount < 0))
             {
                 return CommandResultCode.USER_MGMT_ACCOUNT_BALANCE_ADJUSTMENT_NSF;
             }
 
             userProfile.adjustmentsCounter = fundingTransactionId;
-            userProfile.accounts.addToValue(currency, amount);
+            userProfile.accounts[currency] += amount;
 
             //log.debug("FUND: {}", userProfile);
             return CommandResultCode.SUCCESS;
@@ -104,14 +112,15 @@ namespace Exchange.Core.Processors
          */
         public bool addEmptyUserProfile(long uid)
         {
-            if (userProfiles.get(uid) == null)
+            if (!userProfiles.TryGetValue(uid, out UserProfile profile))
+//            if (userProfiles.get(uid) == null)
             {
-                userProfiles.put(uid, new UserProfile(uid, UserStatus.ACTIVE));
+                userProfiles[uid] = new UserProfile(uid, UserStatus.ACTIVE);
                 return true;
             }
             else
             {
-                log.debug("Can not add user, already exists: {}", uid);
+                log.Debug($"Can not add user, already exists: {uid}");
                 return false;
             }
         }
@@ -129,8 +138,8 @@ namespace Exchange.Core.Processors
          */
         public CommandResultCode suspendUserProfile(long uid)
         {
-            UserProfile userProfile = userProfiles.get(uid);
-            if (userProfile == null)
+            if (!userProfiles.TryGetValue(uid, out UserProfile userProfile))
+//          if (userProfile == null)
             {
                 return CommandResultCode.USER_MGMT_USER_NOT_FOUND;
 
@@ -140,20 +149,20 @@ namespace Exchange.Core.Processors
                 return CommandResultCode.USER_MGMT_USER_ALREADY_SUSPENDED;
 
             }
-            else if (userProfile.positions.anySatisfy(pos-> !pos.isEmpty()))
+            else if (userProfile.positions.Any(pos=> !pos.Value.isEmpty()))
             {
                 return CommandResultCode.USER_MGMT_USER_NOT_SUSPENDABLE_HAS_POSITIONS;
 
             }
-            else if (userProfile.accounts.anySatisfy(acc->acc != 0))
+            else if (userProfile.accounts.Any(acc=> acc.Value != 0))
             {
                 return CommandResultCode.USER_MGMT_USER_NOT_SUSPENDABLE_NON_EMPTY_ACCOUNTS;
 
             }
             else
             {
-                log.debug("Suspended user profile: {}", userProfile);
-                userProfiles.remove(uid);
+                log.Debug($"Suspended user profile: {userProfile}");
+                userProfiles.Remove(uid);
                 // TODO pool UserProfile objects
                 return CommandResultCode.SUCCESS;
             }
@@ -161,12 +170,13 @@ namespace Exchange.Core.Processors
 
         public CommandResultCode resumeUserProfile(long uid)
         {
-            UserProfile userProfile = userProfiles.get(uid);
-            if (userProfile == null)
+            if (!userProfiles.TryGetValue(uid, out UserProfile userProfile))
+//          UserProfile userProfile = userProfiles.get(uid);
+//          if (userProfile == null)
             {
                 // create new empty user profile
                 // account balance adjustments should be applied later
-                userProfiles.put(uid, new UserProfile(uid, UserStatus.ACTIVE));
+                userProfiles[uid] = new UserProfile(uid, UserStatus.ACTIVE);
                 return CommandResultCode.SUCCESS;
             }
             else if (userProfile.userStatus != UserStatus.SUSPENDED)
@@ -178,7 +188,7 @@ namespace Exchange.Core.Processors
             {
                 // resume existing suspended profile (can contain non empty positions or accounts)
                 userProfile.userStatus = UserStatus.ACTIVE;
-                log.debug("Resumed user profile: {}", userProfile);
+                log.Debug($"Resumed user profile: {userProfile}");
                 return CommandResultCode.SUCCESS;
             }
         }
@@ -191,12 +201,12 @@ namespace Exchange.Core.Processors
             userProfiles.Clear();
         }
 
-        //public void writeMarshallable(BytesOut bytes)
-        //{
+        public void writeMarshallable(IBytesOut bytes)
+        {
 
-        //    // write symbolSpecs
-        //    SerializationUtils.marshallLongHashMap(userProfiles, bytes);
-        //}
+            // write symbolSpecs
+            SerializationUtils.marshallLongHashMap(userProfiles, bytes);
+        }
 
         public int stateHash()
         {

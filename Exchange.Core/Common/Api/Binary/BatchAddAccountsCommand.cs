@@ -18,12 +18,12 @@ namespace Exchange.Core.Common.Api.Binary
         users = SerializationUtils.readLongHashMap(bytes, c => SerializationUtils.readIntLongHashMap(bytes));
     }
 
-    //public void writeMarshallable(BytesOut bytes)
-    //{
-    //    SerializationUtils.marshallLongHashMap(users, SerializationUtils::marshallIntLongHashMap, bytes);
-    //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            SerializationUtils.marshallLongHashMap(users, SerializationUtils.marshallIntLongHashMap, bytes);
+        }
 
-    public int getBinaryCommandTypeCode()
+        public int getBinaryCommandTypeCode()
     {
         return (int)BinaryCommandType.ADD_ACCOUNTS;
     }

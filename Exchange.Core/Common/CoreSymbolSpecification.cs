@@ -2,7 +2,7 @@
 
 namespace Exchange.Core.Common
 {
-    public sealed partial class CoreSymbolSpecification : IStateHash
+    public sealed partial class CoreSymbolSpecification : IStateHash, IWriteBytesMarshallable
     {
         public CoreSymbolSpecification(IBytesIn bytes)
         {
@@ -32,20 +32,19 @@ namespace Exchange.Core.Common
 
         //      */
 
-        //    @Override
-        //public void writeMarshallable(BytesOut bytes)
-        //    {
-        //        bytes.writeInt(symbolId);
-        //        bytes.writeByte(type.getCode());
-        //        bytes.writeInt(baseCurrency);
-        //        bytes.writeInt(quoteCurrency);
-        //        bytes.writeLong(baseScaleK);
-        //        bytes.writeLong(quoteScaleK);
-        //        bytes.writeLong(takerFee);
-        //        bytes.writeLong(makerFee);
-        //        bytes.writeLong(marginBuy);
-        //        bytes.writeLong(marginSell);
-        //    }
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeInt(SymbolId);
+            bytes.writeByte((byte)Type);
+            bytes.writeInt(BaseCurrency);
+            bytes.writeInt(QuoteCurrency);
+            bytes.writeLong(BaseScaleK);
+            bytes.writeLong(QuoteScaleK);
+            bytes.writeLong(TakerFee);
+            bytes.writeLong(MakerFee);
+            bytes.writeLong(MarginBuy);
+            bytes.writeLong(MarginSell);
+        }
 
         public int stateHash()
         {

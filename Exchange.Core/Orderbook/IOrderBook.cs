@@ -12,7 +12,7 @@ using ObjectsPool = Exchange.Core.Collections.ObjPool.NaiveObjectsPool;
 
 namespace Exchange.Core.Orderbook
 {
-    public interface IOrderBook : IStateHash //WriteBytesMarshallable, 
+    public interface IOrderBook : IStateHash, IWriteBytesMarshallable
     {
 
         /**

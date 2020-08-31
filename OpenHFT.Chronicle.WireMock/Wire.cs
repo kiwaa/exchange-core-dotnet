@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenHFT.Chronicle.WireMock
 {
-    public interface IBytesOut
+    public class Wire
     {
-        IBytesOut writeLong(long askPrice);
-        IBytesOut writeInt(object p);
-        IBytesOut writeByte(byte direction);
+        public IBytesIn Bytes { get; }
+
     }
 }

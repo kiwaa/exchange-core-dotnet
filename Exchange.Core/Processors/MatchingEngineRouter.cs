@@ -255,14 +255,14 @@ namespace Exchange.Core.Processors
             }
         }
 
-        //public void writeMarshallable(BytesOut bytes)
-        //{
-        //    bytes.writeInt(shardId).writeLong(shardMask);
-        //    binaryCommandsProcessor.writeMarshallable(bytes);
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeInt(shardId).writeLong(shardMask);
+            binaryCommandsProcessor.writeMarshallable(bytes);
 
-        //    // write orderBooks
-        //    SerializationUtils.marshallIntHashMap(orderBooks, bytes);
-        //}
+            // write orderBooks
+            SerializationUtils.marshallIntHashMap(orderBooks, bytes);
+        }
     }
 
 }

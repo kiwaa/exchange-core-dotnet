@@ -254,19 +254,19 @@ namespace Exchange.Core.Common
         // validateInternalState();
     }
 
-    //public void writeMarshallable(BytesOut bytes)
-    //{
-    //    bytes.writeInt(symbol);
-    //    bytes.writeInt(currency);
-    //    bytes.writeByte((byte)direction.getMultiplier());
-    //    bytes.writeLong(openVolume);
-    //    bytes.writeLong(openPriceSum);
-    //    bytes.writeLong(profit);
-    //    bytes.writeLong(pendingSellSize);
-    //    bytes.writeLong(pendingBuySize);
-    //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeInt(symbol);
+            bytes.writeInt(currency);
+            bytes.writeByte((byte)direction);
+            bytes.writeLong(openVolume);
+            bytes.writeLong(openPriceSum);
+            bytes.writeLong(profit);
+            bytes.writeLong(pendingSellSize);
+            bytes.writeLong(pendingBuySize);
+        }
 
-    public void reset()
+        public void reset()
     {
 
         // log.debug("records: {}, Pending B{} S{} total size: {}", records.size(), pendingBuySize, pendingSellSize, totalSize);

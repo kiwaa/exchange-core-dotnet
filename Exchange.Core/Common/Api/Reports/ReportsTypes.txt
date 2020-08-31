@@ -1,0 +1,9 @@
+﻿TotalCurrencyBalanceReportResult :
+    Dictionary<int,long> accountBalances
+    Dictionary<int,long> fees
+    Dictionary<int,long> adjustments
+    Dictionary<int,long> suspends
+    Dictionary<int,long> ordersBalances
+    Dictionary<int,long> openInterestLong
+    Dictionary<int,long> openInterestShort
+

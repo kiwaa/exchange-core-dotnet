@@ -1,6 +1,7 @@
 ﻿using Disruptor;
 using Exchange.Core.Common;
 using Exchange.Core.Common.Cmd;
+using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace Exchange.Core.Processors
         private readonly String name;
         public ISequence Sequence { get; } = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 
-        private TwoStepSlaveProcessor slaveProcessor;
+        public TwoStepSlaveProcessor slaveProcessor { get; set; }
 
         public TwoStepMasterProcessor(RingBuffer<OrderCommand> ringBuffer,
                                       ISequenceBarrier sequenceBarrier,
@@ -81,7 +82,7 @@ namespace Exchange.Core.Processors
         private void processEvents()
         {
 
-            Thread.CurrentThread.setName("Thread-" + name);
+            Thread.CurrentThread.Name = "Thread-" + name;
 
             long nextSequence = Sequence.Value + 1L;
 
@@ -115,7 +116,7 @@ namespace Exchange.Core.Processors
                                 currentSequenceGroup = cmd.eventsGroup;
                             }
 
-                            bool forcedPublish = eventHandler.onEvent(nextSequence, cmd);
+                            bool forcedPublish = eventHandler(nextSequence, cmd);
                             nextSequence++;
 
                             if (forcedPublish)

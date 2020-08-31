@@ -13,7 +13,7 @@ namespace Exchange.Core.Processors
 
         private readonly BlockingCollection<MatcherTradeEvent> eventChainsBuffer;
 
-        private int chainLength { get; }
+        public int chainLength { get; }
 
         public static SharedPool createTestSharedPool()
         {

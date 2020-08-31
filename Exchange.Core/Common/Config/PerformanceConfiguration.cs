@@ -17,7 +17,7 @@ namespace Exchange.Core.Common.Config
                     ", riskEnginesNum=" + RiskEnginesNum +
                     ", msgsInGroupLimit=" + MsgsInGroupLimit +
                     ", maxGroupDurationNs=" + MaxGroupDurationNs +
-                    ", threadFactory=" + (TaskScheduler == null ? null : typeof(TaskScheduler).getSimpleName()) +
+                    ", threadFactory=" + (TaskScheduler == null ? null : TaskScheduler.GetType().Name) +
                     ", waitStrategy=" + WaitStrategy +
                     '}';
         }
@@ -30,9 +30,9 @@ namespace Exchange.Core.Common.Config
                     .riskEnginesNum(1)
                     .msgsInGroupLimit(256)
                     .maxGroupDurationNs(10_000)
-                    .taskScheduler(Thread::new)
+                    .taskScheduler(TaskScheduler.Default)
                     .waitStrategy(CoreWaitStrategy.BLOCKING)
-                    .binaryCommandsLz4CompressorFactory(() => LZ4Factory.fastestInstance().highCompressor())
-                    .orderBookFactory(() => new OrderBookNaiveImpl());
+                    .binaryCommandsLz4CompressorFactory(() => new LZ4Compressor())
+                    .orderBookFactory((spec, pool, helper, loggingCfg) => new OrderBookNaiveImpl(spec, pool, helper, loggingCfg));
     }
 }

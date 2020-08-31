@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenHFT.Chronicle.WireMock
+namespace Exchange.Core.Common
 {
-    public interface IWriteBytesMarshallable
+    public enum UserStatus
     {
-        void writeMarshallable(IBytesOut bytes);
+        ACTIVE = 0, // normal user
+        SUSPENDED = 1 // suspended
     }
 }

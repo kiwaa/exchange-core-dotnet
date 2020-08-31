@@ -52,16 +52,17 @@ namespace Exchange.Core.Utils
 
         public static long[] toLongsArray(byte[] bytes, int padding)
         {
-                int longLength = requiredLongArraySize(bytes.Length, padding);
+            int longLength = requiredLongArraySize(bytes.Length, padding);
             long[] longArray = new long[longLength];
             //log.debug("byte[{}]={}", bytes.length, bytes);
             using (var allocate = new MemoryStream(longLength * 8 * 2))
             {
+                throw new NotImplementedException();
                 //ByteBuffer allocate = ByteBuffer.allocate(longLength * 8 * 2);
-                LongBuffer longBuffer = allocate.asLongBuffer();
-                allocate.Write(bytes);
-                longBuffer.get(longArray);
-                return longArray;
+                //LongBuffer longBuffer = allocate.asLongBuffer();
+                //allocate.Write(bytes);
+                //longBuffer.get(longArray);
+                //return longArray;
             }
         }
 
@@ -114,26 +115,30 @@ namespace Exchange.Core.Utils
         //    return WireType.RAW.apply(bytes);
         //}
 
-        //public static Wire longsLz4ToWire(long[] dataArray, int longsTransfered)
-        //{
+        public static Wire longsLz4ToWire(long[] dataArray, int longsTransfered)
+        {
 
-        //    //        log.debug("long dataArray.len={} longsTransfered={}", dataArray.length, longsTransfered);
+            //        log.debug("long dataArray.len={} longsTransfered={}", dataArray.length, longsTransfered);
 
-        //    ByteBuffer byteBuffer = ByteBuffer.allocate(longsTransfered * 8);
-        //    byteBuffer.asLongBuffer().put(dataArray, 0, longsTransfered);
+            //ByteBuffer byteBuffer = ByteBuffer.allocate(longsTransfered * 8);
+            using (var byteBuffer = new MemoryStream(longsTransfered * 8))
+            {
+                throw new NotImplementedException();
+                //byteBuffer.asLongBuffer().put(dataArray, 0, longsTransfered);
 
-        //    int originalSizeBytes = byteBuffer.getInt();
+                //int originalSizeBytes = byteBuffer.getInt();
 
-        //    ByteBuffer uncompressedByteBuffer = ByteBuffer.allocate(originalSizeBytes);
+                //ByteBuffer uncompressedByteBuffer = ByteBuffer.allocate(originalSizeBytes);
 
-        //    LZ4FastDecompressor lz4FastDecompressor = LZ4Factory.fastestInstance().fastDecompressor();
+                //LZ4FastDecompressor lz4FastDecompressor = LZ4Factory.fastestInstance().fastDecompressor();
 
-        //    lz4FastDecompressor.decompress(byteBuffer, byteBuffer.position(), uncompressedByteBuffer, uncompressedByteBuffer.position(), originalSizeBytes);
+                //lz4FastDecompressor.decompress(byteBuffer, byteBuffer.position(), uncompressedByteBuffer, uncompressedByteBuffer.position(), originalSizeBytes);
 
-        //    Bytes<ByteBuffer> bytes = Bytes.wrapForRead(uncompressedByteBuffer);
+                //Bytes<ByteBuffer> bytes = Bytes.wrapForRead(uncompressedByteBuffer);
 
-        //    return WireType.RAW.apply(bytes);
-        //}
+                //return WireType.RAW.apply(bytes);
+            }
+        }
 
 
         public static int requiredLongArraySize(int bytesLength)
@@ -153,14 +158,14 @@ namespace Exchange.Core.Utils
         //}
 
 
-        //public static void marshallLongArray(long[] longs, BytesOut bytes)
-        //{
-        //    bytes.writeInt(longs.length);
-        //    for (long word : longs)
-        //    {
-        //        bytes.writeLong(word);
-        //    }
-        //}
+        public static void marshallLongArray(long[] longs, IBytesOut bytes)
+        {
+            bytes.writeInt(longs.Length);
+            foreach (long word in longs)
+            {
+                bytes.writeLong(word);
+            }
+        }
 
 
         public static long[] readLongArray(IBytesIn bytes)
@@ -199,18 +204,19 @@ namespace Exchange.Core.Utils
         //    return hashMap;
         //}
 
-        //public static void marshallIntLongHashMap(final MutableIntLongMap hashMap, final BytesOut bytes)
-        //{
+        public static void marshallIntLongHashMap(Dictionary<int, long> hashMap, IBytesOut bytes)
+        {
 
-        //    bytes.writeInt(hashMap.size());
+            bytes.writeInt(hashMap.Count);
 
-        //    hashMap.forEachKeyValue((k, v)-> {
-        //        bytes.writeInt(k);
-        //        bytes.writeLong(v);
-        //    });
-        //}
+            foreach (var pair in hashMap)
+            {
+                bytes.writeInt(pair.Key);
+                bytes.writeLong(pair.Value);
+            };
+        }
 
-        public static Dictionary<int,long> readIntLongHashMap(IBytesIn bytes)
+        public static Dictionary<int, long> readIntLongHashMap(IBytesIn bytes)
         {
             int length = bytes.readInt();
             Dictionary<int, long> hashMap = new Dictionary<int, long>(length);
@@ -244,29 +250,29 @@ namespace Exchange.Core.Utils
         //}
 
 
-        //public static <T extends WriteBytesMarshallable> void marshallLongHashMap(final LongObjectHashMap<T> hashMap, final BytesOut bytes)
-        //{
+        public static void marshallLongHashMap<T>(Dictionary<long, T> hashMap, IBytesOut bytes) where T : IWriteBytesMarshallable
+        {
 
-        //    bytes.writeInt(hashMap.size());
+            bytes.writeInt(hashMap.Count);
 
-        //    hashMap.forEachKeyValue((k, v)-> {
-        //        bytes.writeLong(k);
-        //        v.writeMarshallable(bytes);
-        //    });
+            foreach (var pair in hashMap)
+            {
+                bytes.writeLong(pair.Key);
+                pair.Value.writeMarshallable(bytes);
+            }
+        }
 
-        //}
+        public static void marshallLongHashMap<T>(Dictionary<long, T> hashMap, Action<T, IBytesOut> valuesMarshaller, IBytesOut bytes)
+        {
 
-        //public static <T> void marshallLongHashMap(final LongObjectHashMap<T> hashMap, final BiConsumer<T, BytesOut> valuesMarshaller, final BytesOut bytes)
-        //{
+            bytes.writeInt(hashMap.Count);
 
-        //    bytes.writeInt(hashMap.size());
-
-        //    hashMap.forEachKeyValue((k, v)-> {
-        //        bytes.writeLong(k);
-        //        valuesMarshaller.accept(v, bytes);
-        //    });
-
-        //}
+            foreach (var pair in hashMap)
+            {
+                bytes.writeLong(pair.Key);
+                valuesMarshaller(pair.Value, bytes);
+            }
+        }
 
         public static Dictionary<long, T> readLongHashMap<T>(IBytesIn bytes, Func<IBytesIn, T> creator)
         {
@@ -279,23 +285,25 @@ namespace Exchange.Core.Utils
             return hashMap;
         }
 
-        //public static <T extends WriteBytesMarshallable> void marshallIntHashMap(final IntObjectHashMap<T> hashMap, final BytesOut bytes)
-        //{
-        //    bytes.writeInt(hashMap.size());
-        //    hashMap.forEachKeyValue((k, v)-> {
-        //        bytes.writeInt(k);
-        //        v.writeMarshallable(bytes);
-        //    });
-        //}
+        public static void marshallIntHashMap<T>(Dictionary<int, T> hashMap, IBytesOut bytes) where T : IWriteBytesMarshallable
+        {
+            bytes.writeInt(hashMap.Count);
+            foreach (var pair in hashMap)
+            {
+                bytes.writeInt(pair.Key);
+                pair.Value.writeMarshallable(bytes);
+            }
+        }
 
-        //public static <T> void marshallIntHashMap(final IntObjectHashMap<T> hashMap, final BytesOut bytes, final Consumer<T> elementMarshaller)
-        //{
-        //    bytes.writeInt(hashMap.size());
-        //    hashMap.forEachKeyValue((k, v)-> {
-        //        bytes.writeInt(k);
-        //        elementMarshaller.accept(v);
-        //    });
-        //}
+        public static void marshallIntHashMap<T>(Dictionary<int, T> hashMap, IBytesOut bytes, Action<T> elementMarshaller)
+        {
+            bytes.writeInt(hashMap.Count);
+            foreach (var pair in hashMap)
+            {
+                bytes.writeInt(pair.Key);
+                elementMarshaller(pair.Value);
+            }
+        }
 
         public static Dictionary<int, T> readIntHashMap<T>(IBytesIn bytes, Func<IBytesIn, T> creator)
         {
@@ -309,17 +317,18 @@ namespace Exchange.Core.Utils
         }
 
 
-        //public static <T extends WriteBytesMarshallable> void marshallLongMap(final Map<Long, T> map, final BytesOut bytes)
-        //{
-        //    bytes.writeInt(map.size());
+        public static void marshallLongMap<T>(IDictionary<long, T> map, IBytesOut bytes) where T : IWriteBytesMarshallable
+        {
+            bytes.writeInt(map.Count);
 
-        //    map.forEach((k, v)-> {
-        //        bytes.writeLong(k);
-        //        v.writeMarshallable(bytes);
-        //    });
-        //}
+            foreach (var pair in map)
+            {
+                bytes.writeLong(pair.Key);
+                pair.Value.writeMarshallable(bytes);
+            }
+        }
 
-        public static M readLongMap<T,M>(IBytesIn bytes, Func<M> mapSupplier, Func<IBytesIn, T> creator) where M : IDictionary<long, T>
+        public static M readLongMap<T, M>(IBytesIn bytes, Func<M> mapSupplier, Func<IBytesIn, T> creator) where M : IDictionary<long, T>
         {
             int length = bytes.readInt();
             M map = mapSupplier();
@@ -413,25 +422,26 @@ namespace Exchange.Core.Utils
         //    return res;
         //}
 
-        //public static IntLongHashMap mergeSum(final IntLongHashMap... maps)
-        //{
-        //    IntLongHashMap res = null;
-        //    for (IntLongHashMap map : maps)
-        //    {
-        //        if (map != null)
-        //        {
-        //            if (res == null)
-        //            {
-        //                res = new IntLongHashMap(map);
-        //            }
-        //            else
-        //            {
-        //                map.forEachKeyValue(res::addToValue);
-        //            }
-        //        }
-        //    }
-        //    return res != null ? res : new IntLongHashMap();
-        //}
+        public static Dictionary<int, long> mergeSum(params Dictionary<int, long>[] maps)
+        {
+            Dictionary<int,long> res = null;
+            foreach (Dictionary<int, long> map in maps)
+            {
+                if (map != null)
+                {
+                    if (res == null)
+                    {
+                        res = new Dictionary<int, long>(map);
+                    }
+                    else
+                    {
+                        foreach (var pair in map)
+                            res[pair.Key] += pair.Value;
+                    }
+                }
+            }
+            return res != null ? res : new Dictionary<int, long>();
+        }
 
     }
 }

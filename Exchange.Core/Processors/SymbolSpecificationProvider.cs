@@ -71,11 +71,11 @@ namespace Exchange.Core.Processors
             symbolSpecs.Clear();
         }
 
-        //public void writeMarshallable(IBytesOut bytes)
-        //{
-        //    // write symbolSpecs
-        //    SerializationUtils.marshallIntHashMap(symbolSpecs, bytes);
-        //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            // write symbolSpecs
+            SerializationUtils.marshallIntHashMap(symbolSpecs, bytes);
+        }
 
         public int stateHash()
         {

@@ -96,7 +96,7 @@ namespace Exchange.Core.Processors
 
                 incomingData.Remove(transferId);
 
-                IBytesIn bytesIn = SerializationUtils.longsLz4ToWire(record.dataArray, record.wordsTransfered).bytes();
+                IBytesIn bytesIn = SerializationUtils.longsLz4ToWire(record.dataArray, record.wordsTransfered).Bytes;
 
                 if (cmd.Command == OrderCommandType.BINARY_DATA_QUERY)
                 {
@@ -194,12 +194,12 @@ namespace Exchange.Core.Processors
             incomingData.Clear();
         }
 
-        //public void writeMarshallable(BytesOut bytes)
-        //{
+        public void writeMarshallable(IBytesOut bytes)
+        {
 
-        //    // write symbolSpecs
-        //    SerializationUtils.marshallLongHashMap(incomingData, bytes);
-        //}
+            // write symbolSpecs
+            SerializationUtils.marshallLongHashMap(incomingData, bytes);
+        }
 
         public int stateHash()
         {
@@ -207,7 +207,7 @@ namespace Exchange.Core.Processors
         }
 
 
-        private class TransferRecord : IStateHash //WriteBytesMarshallable, 
+        private class TransferRecord : IStateHash, IWriteBytesMarshallable
         {
 
             public long[] dataArray { get; set; }
@@ -241,11 +241,11 @@ namespace Exchange.Core.Processors
 
             }
 
-            //    public void writeMarshallable(BytesOut bytes)
-            //{
-            //    bytes.writeInt(wordsTransfered);
-            //    SerializationUtils.marshallLongArray(dataArray, bytes);
-            //}
+            public void writeMarshallable(IBytesOut bytes)
+            {
+                bytes.writeInt(wordsTransfered);
+                SerializationUtils.marshallLongArray(dataArray, bytes);
+            }
 
             public int stateHash()
             {

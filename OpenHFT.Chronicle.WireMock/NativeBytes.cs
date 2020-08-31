@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OpenHFT.Chronicle.WireMock
 {
-    public class NativeBytes<T>
+    public class NativeBytes<T> : IBytesOut
     {
         public int readRemaining()
         {
@@ -15,6 +15,21 @@ namespace OpenHFT.Chronicle.WireMock
         }
 
         public void read(MemoryStream byteBuffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IBytesOut writeLong(long askPrice)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IBytesOut writeInt(object p)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IBytesOut writeByte(byte direction)
         {
             throw new NotImplementedException();
         }

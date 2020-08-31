@@ -1,6 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Api;
 using Exchange.Core.Common.Api.Binary;
+using Exchange.Core.Common.Api.Reports;
 using Exchange.Core.Common.Cmd;
 using Exchange.Core.Common.Config;
 using Exchange.Core.Tests.Utils;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Exchange.Core.Tests.Utils
@@ -24,7 +26,7 @@ namespace Exchange.Core.Tests.Utils
         //private readonly AffinityThreadFactory threadFactory { get; }
 
         //private AtomicLong uniqueIdCounterLong = new AtomicLong();
-        //private AtomicInteger uniqueIdCounterInt = new AtomicInteger();
+        private volatile int uniqueIdCounterInt = 0;
 
         private Action<OrderCommand, long> consumer { get; set; } = (cmd, seq) => { };
 
@@ -94,8 +96,8 @@ namespace Exchange.Core.Tests.Utils
                     .serializationCfg(serializationCfg)
                     .build();
 
-            this.exchangeCore = ExchangeCore.builder()
-                    .resultsConsumer((cmd, seq) => consumer.accept(cmd, seq))
+            this.exchangeCore = ExchangeCore.Builder()
+                    .resultsConsumer(consumer)
                     .exchangeConfiguration(exchangeConfiguration)
                     .build();
 
@@ -106,51 +108,51 @@ namespace Exchange.Core.Tests.Utils
             this.api = this.exchangeCore.getApi();
         }
 
-        //public void initBasicSymbols()
-        //{
+        public void initBasicSymbols()
+        {
 
-        //    addSymbol(TestConstants.SYMBOLSPEC_EUR_USD);
-        //    addSymbol(TestConstants.SYMBOLSPEC_ETH_XBT);
-        //}
+            addSymbol(TestConstants.SYMBOLSPEC_EUR_USD);
+            addSymbol(TestConstants.SYMBOLSPEC_ETH_XBT);
+        }
 
-        //public void initFeeSymbols()
-        //{
-        //    addSymbol(TestConstants.SYMBOLSPECFEE_XBT_LTC);
-        //    addSymbol(TestConstants.SYMBOLSPECFEE_USD_JPY);
-        //}
+        public void initFeeSymbols()
+        {
+            addSymbol(TestConstants.SYMBOLSPECFEE_XBT_LTC);
+            addSymbol(TestConstants.SYMBOLSPECFEE_USD_JPY);
+        }
 
-        //public void initBasicUsers()
-        //{
-        //    initBasicUser(TestConstants.UID_1);
-        //    initBasicUser(TestConstants.UID_2);
-        //    initBasicUser(TestConstants.UID_3);
-        //    initBasicUser(TestConstants.UID_4);
-        //}
+        public void initBasicUsers()
+        {
+            initBasicUser(TestConstants.UID_1);
+            initBasicUser(TestConstants.UID_2);
+            initBasicUser(TestConstants.UID_3);
+            initBasicUser(TestConstants.UID_4);
+        }
 
-        //public void initFeeUsers()
-        //{
-        //    initFeeUser(TestConstants.UID_1);
-        //    initFeeUser(TestConstants.UID_2);
-        //    initFeeUser(TestConstants.UID_3);
-        //    initFeeUser(TestConstants.UID_4);
-        //}
+        public void initFeeUsers()
+        {
+            initFeeUser(TestConstants.UID_1);
+            initFeeUser(TestConstants.UID_2);
+            initFeeUser(TestConstants.UID_3);
+            initFeeUser(TestConstants.UID_4);
+        }
 
-        //public void initBasicUser(long uid)
-        //{
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAddUser.Builder().uid(uid).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(2L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_ETH).build()).join(), CommandResultCode.SUCCESS);
-        //}
+        public void initBasicUser(long uid)
+        {
+            Assert.AreEqual(api.submitCommandAsync(ApiAddUser.Builder().uid(uid).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(2L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_ETH).build()).Result, CommandResultCode.SUCCESS);
+        }
 
-        //public void initFeeUser(long uid)
-        //{
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAddUser.Builder().uid(uid).build()).join(), Is.is (CommandResultCode.SUCCESS));
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(2L).amount(10_000_000L).currency(TestConstants.CURRENECY_JPY).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), CommandResultCode.SUCCESS);
-        //    Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(4L).amount(1000_0000_0000L).currency(TestConstants.CURRENECY_LTC).build()).join(), CommandResultCode.SUCCESS);
-        //}
+        public void initFeeUser(long uid)
+        {
+            Assert.AreEqual(api.submitCommandAsync(ApiAddUser.Builder().uid(uid).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(2L).amount(10_000_000L).currency(TestConstants.CURRENECY_JPY).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).Result, CommandResultCode.SUCCESS);
+            Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(4L).amount(1000_0000_0000L).currency(TestConstants.CURRENECY_LTC).build()).Result, CommandResultCode.SUCCESS);
+        }
 
         //public void createUserWithMoney(long uid, int currency, long amount)
         //{
@@ -168,10 +170,10 @@ namespace Exchange.Core.Tests.Utils
         //}
 
 
-        //public void addSymbol(CoreSymbolSpecification symbol)
-        //{
-        //    sendBinaryDataCommandSync(new BatchAddSymbolsCommand(symbol), 5000);
-        //}
+        public void addSymbol(CoreSymbolSpecification symbol)
+        {
+            sendBinaryDataCommandSync(new BatchAddSymbolsCommand(symbol), 5000);
+        }
 
         //public void addSymbols(List<CoreSymbolSpecification> symbols)
         //{
@@ -179,25 +181,25 @@ namespace Exchange.Core.Tests.Utils
         //    Lists.partition(symbols, 10000).forEach(partition => sendBinaryDataCommandSync(new BatchAddSymbolsCommand(partition), 5000));
         //}
 
-        //public void sendBinaryDataCommandSync(BinaryDataCommand data, int timeOutMs)
-        //{
-        //    Task<CommandResultCode> future = api.submitBinaryDataAsync(data);
-        //    try
-        //    {
-        //        future.Wait(timeOutMs);
-        //        Assert.AreEqual(future.Result, CommandResultCode.SUCCESS);
-        //    }
-        //    catch (AggregateException ex)
-        //    {
-        //        log.Error("Failed sending binary data command", ex);
-        //        throw new RuntimeException(ex);
-        //    }
-        //}
+        public void sendBinaryDataCommandSync(IBinaryDataCommand data, int timeOutMs)
+        {
+            Task<CommandResultCode> future = api.submitBinaryDataAsync(data);
+            try
+            {
+                future.Wait(timeOutMs);
+                Assert.AreEqual(future.Result, CommandResultCode.SUCCESS);
+            }
+            catch (AggregateException ex)
+            {
+                log.Error("Failed sending binary data command", ex);
+                throw new Exception("", ex);
+            }
+        }
 
-        //private int getRandomTransferId()
-        //{
-        //    return uniqueIdCounterInt.incrementAndGet();
-        //}
+        private int getRandomTransferId()
+        {
+            return Interlocked.Increment(ref uniqueIdCounterInt);
+        }
 
         //private long getRandomTransactionId()
         //{
@@ -234,7 +236,7 @@ namespace Exchange.Core.Tests.Utils
         //                        .build()));
         //    }
 
-        //    api.submitCommandAsync(ApiNop.builder().build()).join();
+        //    api.submitCommandAsync(ApiNop.builder().build()).Result;
         //}
 
         //public void usersInit(int numUsers, HashSet<int> currencies)
@@ -253,30 +255,30 @@ namespace Exchange.Core.Tests.Utils
         //        }
         //    }
 
-        //    api.submitCommandAsync(ApiNop.builder().build()).join();
+        //    api.submitCommandAsync(ApiNop.builder().build()).Result;
         //}
 
         //public void resetExchangeCore()
         //{
-        //    CommandResultCode res = api.submitCommandAsync(ApiReset.builder().build()).join();
+        //    CommandResultCode res = api.submitCommandAsync(ApiReset.builder().build()).Result;
         //    Assert.AreEqual(res, CommandResultCode.SUCCESS);
         //}
 
-        //public void submitCommandSync(ApiCommand apiCommand, CommandResultCode expectedResultCode)
-        //{
-        //    Assert.AreEqual(api.submitCommandAsync(apiCommand).join(), expectedResultCode);
-        //}
+        public void submitCommandSync(ApiCommand apiCommand, CommandResultCode expectedResultCode)
+        {
+            Assert.AreEqual(api.submitCommandAsync(apiCommand).Result, expectedResultCode);
+        }
 
-        //public void submitCommandSync(ApiCommand apiCommand, Action<OrderCommand> validator)
-        //{
-        //    var result = api.submitCommandAsyncFullResponse(apiCommand).Result;
-        //    validator(result);
-        //}
+        public void submitCommandSync(ApiCommand apiCommand, Action<OrderCommand> validator)
+        {
+            var result = api.submitCommandAsyncFullResponse(apiCommand).Result;
+            validator(result);
+        }
 
-        //public L2MarketData requestCurrentOrderBook(int symbol)
-        //{
-        //    return api.requestOrderBookAsync(symbol, -1).Result;
-        //}
+        public L2MarketData requestCurrentOrderBook(int symbol)
+        {
+            return api.requestOrderBookAsync(symbol, -1).Result;
+        }
 
         //// todo rename
         //public void validateUserState(long uid, Action<SingleUserReportResult> resultValidator)
@@ -290,20 +292,22 @@ namespace Exchange.Core.Tests.Utils
         //    return api.processReport(new SingleUserReportQuery(clientId), getRandomTransferId()).get();
         //}
 
-        //public TotalCurrencyBalanceReportResult totalBalanceReport()
-        //{
-        //    TotalCurrencyBalanceReportResult res = api.processReport(new TotalCurrencyBalanceReportQuery(), getRandomTransferId()).join();
-        //    IntLongHashMap openInterestLong = res.getOpenInterestLong();
-        //    IntLongHashMap openInterestShort = res.getOpenInterestShort();
-        //    IntLongHashMap openInterestDiff = new IntLongHashMap(openInterestLong);
-        //    openInterestShort.forEachKeyValue((k, v) => openInterestDiff.addToValue(k, -v));
-        //    if (openInterestDiff.anySatisfy(vol => vol != 0))
-        //    {
-        //        throw new InvalidOperationException("Open Interest balance check failed");
-        //    }
+        public TotalCurrencyBalanceReportResult totalBalanceReport()
+        {
+            TotalCurrencyBalanceReportResult res = api.processReport(new TotalCurrencyBalanceReportQuery(), getRandomTransferId()).Result;
+            Dictionary<int,long> openInterestLong = res.OpenInterestLong;
+            Dictionary<int, long> openInterestShort = res.OpenInterestShort;
+            Dictionary<int, long> openInterestDiff = new Dictionary<int, long>(openInterestLong);
 
-        //    return res;
-        //}
+            foreach (var pair in openInterestShort)
+                openInterestDiff[pair.Key] += -pair.Value;
+            if (openInterestDiff.Any(vol => vol.Value != 0))
+            {
+                throw new InvalidOperationException("Open Interest balance check failed");
+            }
+
+            return res;
+        }
 
         //public int requestStateHash()
         //{
@@ -452,7 +456,7 @@ namespace Exchange.Core.Tests.Utils
 
         public void Dispose()
         {
-            exchangeCore.shutdown(3000, TimeUnit.MILLISECONDS);
+            exchangeCore.shutdown(TimeSpan.FromMilliseconds(3000));
         }
 
 

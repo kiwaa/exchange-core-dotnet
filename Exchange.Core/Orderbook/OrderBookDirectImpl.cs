@@ -879,13 +879,15 @@ namespace Exchange.Core.Orderbook
             }
         }
 
-        //public void writeMarshallable(BytesOut bytes)
-        //{
-        //    bytes.writeByte(getImplementationType().getCode());
-        //    symbolSpec.writeMarshallable(bytes);
-        //    bytes.writeInt(orderIdIndex.size(int.MaxValue));
-        //    askOrdersStream(true).forEach(order->order.writeMarshallable(bytes));
-        //    bidOrdersStream(true).forEach(order->order.writeMarshallable(bytes));
-        //}
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeByte((byte)getImplementationType());
+            symbolSpec.writeMarshallable(bytes);
+            bytes.writeInt(orderIdIndex.size(int.MaxValue));
+            foreach (var order in askOrdersStream(true))
+               ((DirectOrder) order).writeMarshallable(bytes);
+            foreach (var order in bidOrdersStream(true))
+                ((DirectOrder)order).writeMarshallable(bytes);
+        }
     }
 }

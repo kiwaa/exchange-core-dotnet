@@ -830,19 +830,19 @@ namespace Exchange.Core.Processors
             objectsPool.Put(ObjectsPool.SYMBOL_POSITION_RECORD, record);
         }
 
-        //public void writeMarshallable(IBytesOut bytes)
-        //{
+        public void writeMarshallable(IBytesOut bytes)
+        {
 
-        //    bytes.writeInt(shardId).writeLong(shardMask);
+            bytes.writeInt(shardId).writeLong(shardMask);
 
-        //    symbolSpecificationProvider.writeMarshallable(bytes);
-        //    userProfileService.writeMarshallable(bytes);
-        //    binaryCommandsProcessor.writeMarshallable(bytes);
-        //    SerializationUtils.marshallIntHashMap(lastPriceCache, bytes);
-        //    SerializationUtils.marshallIntLongHashMap(fees, bytes);
-        //    SerializationUtils.marshallIntLongHashMap(adjustments, bytes);
-        //    SerializationUtils.marshallIntLongHashMap(suspends, bytes);
-        //}
+            symbolSpecificationProvider.writeMarshallable(bytes);
+            userProfileService.writeMarshallable(bytes);
+            binaryCommandsProcessor.writeMarshallable(bytes);
+            SerializationUtils.marshallIntHashMap(lastPriceCache, bytes);
+            SerializationUtils.marshallIntLongHashMap(fees, bytes);
+            SerializationUtils.marshallIntLongHashMap(adjustments, bytes);
+            SerializationUtils.marshallIntLongHashMap(suspends, bytes);
+        }
 
         public void reset()
         {

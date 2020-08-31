@@ -204,12 +204,12 @@ namespace Exchange.Core.Orderbook
             return String.Format("%d : vol:%d num:%d : %s", Price, TotalVolume, getNumOrders(), orders);
         }
 
-        //public void writeMarshallable(BytesOut bytes)
-        //    {
-        //        bytes.writeLong(price);
-        //        SerializationUtils.marshallLongMap(entries, bytes);
-        //        bytes.writeLong(totalVolume);
-        //    }
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            bytes.writeLong(Price);
+            SerializationUtils.marshallLongMap(entries, bytes);
+            bytes.writeLong(TotalVolume);
+        }
 
         public int CompareTo(OrdersBucketNaive other)
         {

@@ -32,5 +32,10 @@ namespace Exchange.Core.Common.Api.Reports
         {
             throw new System.NotImplementedException();
         }
+
+        public void writeMarshallable(IBytesOut bytes)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
