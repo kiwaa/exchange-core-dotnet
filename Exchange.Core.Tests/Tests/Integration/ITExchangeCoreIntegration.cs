@@ -171,394 +171,435 @@ namespace Exchange.Core.Tests.Integration
         }
 
 
-        //        [Test, Timeout(5000)]
-        //        public void exchangeRiskBasicTest() throws Exception
-        //        {
+        [Test, Timeout(5000)]
+        public void exchangeRiskBasicTest()
+        {
 
-        //                using (final ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration())) {
-        //                    container.initBasicSymbols();
-        //                    container.createUserWithMoney(UID_1, CURRENECY_XBT, 2_000_000); // 2M satoshi (0.02 BTC)
+            using (ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration()))
+            {
+                container.initBasicSymbols();
+                container.createUserWithMoney(TestConstants.UID_1, TestConstants.CURRENECY_XBT, 2_000_000); // 2M satoshi (0.02 BTC)
 
-        //                    // try submit an order - limit BUY 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
-        //                    // should be rejected
-        //                    final ApiPlaceOrder order101 = ApiPlaceOrder.builder().uid(UID_1).orderId(101).price(30_000).reservePrice(30_000)
-        //                            .size(7).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build();
+                // try submit an order - limit BUY 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
+                // should be rejected
+                ApiPlaceOrder order101 = ApiPlaceOrder.Builder().uid(TestConstants.UID_1).orderId(101).price(30_000).reservePrice(30_000)
+                        .size(7).action(OrderAction.BID).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build();
 
-        //    container.submitCommandSync(order101, cmd-> {
-        //                        Assert.AreEqual(cmd.resultCode, is (CommandResultCode.RISK_NSF));
-        //});
+                container.submitCommandSync(order101, cmd =>
+                {
+                    Assert.AreEqual(cmd.ResultCode, CommandResultCode.RISK_NSF);
+                });
 
-        //// verify
-        //container.validateUserState(UID_1, profile-> {
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (2_000_000L));
-        //    assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //});
+                // verify
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 2_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Any(), false);
+                });
 
-        //// add 100K more
-        //container.submitCommandSync(ApiAdjustUserBalance.builder().uid(UID_1).currency(CURRENECY_XBT).amount(100_000).transactionId(223948217349827L).build(), CHECK_SUCCESS);
+                // add 100K more
+                container.submitCommandSync(ApiAdjustUserBalance.Builder().uid(TestConstants.UID_1).currency(TestConstants.CURRENECY_XBT).amount(100_000).transactionId(223948217349827L).build(), ExchangeTestContainer.CHECK_SUCCESS);
 
-        //// submit order again - should be placed
-        //container.submitCommandSync(order101, cmd-> {
-        //    Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //    Assert.AreEqual(cmd.orderId, is (101L));
-        //    Assert.AreEqual(cmd.uid, is (UID_1));
-        //    Assert.AreEqual(cmd.price, is (30_000L));
-        //    Assert.AreEqual(cmd.reserveBidPrice, is (30_000L));
-        //    Assert.AreEqual(cmd.size, is (7L));
-        //    Assert.AreEqual(cmd.action, is (OrderAction.BID));
-        //    Assert.AreEqual(cmd.orderType, is (GTC));
-        //    Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //    Assert.IsNull(cmd.matcherEvent);
-        //});
+                // submit order again - should be placed
+                container.submitCommandSync(order101, cmd =>
+                {
+                    Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                    Assert.AreEqual(cmd.OrderId, 101L);
+                    Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                    Assert.AreEqual(cmd.Price, 30_000L);
+                    Assert.AreEqual(cmd.ReserveBidPrice, 30_000L);
+                    Assert.AreEqual(cmd.Size, 7L);
+                    Assert.AreEqual(cmd.Action, OrderAction.BID);
+                    Assert.AreEqual(cmd.OrderType, OrderType.GTC);
+                    Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                    Assert.IsNull(cmd.MatcherEvent);
+                });
 
-        //// verify order placed with correct reserve price and account balance is updated accordingly
-        //container.validateUserState(UID_1, profile-> {
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (0L));
-        //    Assert.AreEqual(profile.fetchIndexedOrders().get(101L).price, is (30_000L));
-        //});
+                // verify order placed with correct reserve price and account balance is updated accordingly
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[101L].Price, 30_000L);
+                });
 
-        //container.createUserWithMoney(UID_2, CURRENECY_ETH, 699_999); // 699'999 szabo (<~0.7 ETH)
-        //                                                              // try submit an order - sell 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
-        //                                                              // should be rejected
-        //final ApiPlaceOrder order102 = ApiPlaceOrder.builder().uid(UID_2).orderId(102).price(30_000).size(7).action(ASK).orderType(OrderType.IOC).symbol(SYMBOL_EXCHANGE).build();
-        //container.submitCommandSync(order102, cmd-> {
-        //    Assert.AreEqual(cmd.resultCode, is (CommandResultCode.RISK_NSF));
-        //});
+                container.createUserWithMoney(TestConstants.UID_2, TestConstants.CURRENECY_ETH, 699_999); // 699'999 szabo (<~0.7 ETH)
+                                                                                                          // try submit an order - sell 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
+                                                                                                          // should be rejected
+                ApiPlaceOrder order102 = ApiPlaceOrder.Builder().uid(TestConstants.UID_2).orderId(102).price(30_000).size(7).action(OrderAction.ASK).orderType(OrderType.IOC).symbol(TestConstants.SYMBOL_EXCHANGE).build();
+                container.submitCommandSync(order102, cmd =>
+                {
+                    Assert.AreEqual(cmd.ResultCode, CommandResultCode.RISK_NSF);
+                });
 
-        //// verify order is rejected and account balance is not changed
-        //container.validateUserState(UID_2, profile-> {
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (699_999L));
-        //    assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //});
+                // verify order is rejected and account balance is not changed
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 699_999L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Any(), false);
+                });
 
-        //// add 1 szabo more
-        //container.submitCommandSync(ApiAdjustUserBalance.builder().uid(UID_2).currency(CURRENECY_ETH).amount(1).transactionId(2193842938742L).build(), CHECK_SUCCESS);
+                // add 1 szabo more
+                container.submitCommandSync(ApiAdjustUserBalance.Builder().uid(TestConstants.UID_2).currency(TestConstants.CURRENECY_ETH).amount(1).transactionId(2193842938742L).build(), ExchangeTestContainer.CHECK_SUCCESS);
 
-        //// submit order again - should be matched
-        //container.submitCommandSync(order102, cmd-> {
-        //    Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //    Assert.AreEqual(cmd.orderId, is (102L));
-        //    Assert.AreEqual(cmd.uid, is (UID_2));
-        //    Assert.AreEqual(cmd.price, is (30_000L));
-        //    Assert.AreEqual(cmd.size, is (7L));
-        //    Assert.AreEqual(cmd.action, is (ASK));
-        //    Assert.AreEqual(cmd.orderType, is (OrderType.IOC));
-        //    Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //    assertNotNull(cmd.matcherEvent);
-        //});
+                // submit order again - should be matched
+                container.submitCommandSync(order102, cmd =>
+                {
+                    Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                    Assert.AreEqual(cmd.OrderId, 102L);
+                    Assert.AreEqual(cmd.Uid, TestConstants.UID_2);
+                    Assert.AreEqual(cmd.Price, 30_000L);
+                    Assert.AreEqual(cmd.Size, 7L);
+                    Assert.AreEqual(cmd.Action, OrderAction.ASK);
+                    Assert.AreEqual(cmd.OrderType, OrderType.IOC);
+                    Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                    Assert.NotNull(cmd.MatcherEvent);
+                });
 
-        //container.validateUserState(UID_2, profile-> {
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (2_100_000L));
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (0L));
-        //    assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //});
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 2_100_000L);
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Any(), false);
+                });
 
-        //container.validateUserState(UID_1, profile-> {
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (700_000L));
-        //    Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (0L));
-        //    assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //});
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 700_000L);
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Any(), false);
+                });
 
-        //assertTrue(container.totalBalanceReport().isGlobalBalancesAllZero());
-        //                }
-        //                }
+                Assert.AreEqual(container.totalBalanceReport().isGlobalBalancesAllZero(), true);
+            }
+        }
 
-        //    [Test, Timeout(5000)]
-        //public void exchangeRiskMoveTest() throws Exception
-        //{
+        [Test, Timeout(5000)]
+        public void exchangeRiskMoveTest()
+        {
 
-        //                    using (final ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration())) {
-        //        container.initBasicSymbols();
-        //        container.createUserWithMoney(UID_1, CURRENECY_ETH, 100_000_000); // 100M szabo (100 ETH)
+            using (ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration()))
+            {
+                container.initBasicSymbols();
+                container.createUserWithMoney(TestConstants.UID_1, TestConstants.CURRENECY_ETH, 100_000_000); // 100M szabo (100 ETH)
 
-        //        // try submit an order - sell 1001 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
-        //        // should be rejected
-        //        container.submitCommandSync(ApiPlaceOrder.builder().uid(UID_1).orderId(202).price(30_000).size(1001).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.RISK_NSF));
-        //        });
+                // try submit an order - sell 1001 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
+                // should be rejected
+                container.submitCommandSync(ApiPlaceOrder.Builder().uid(TestConstants.UID_1).orderId(202).price(30_000).size(1001).action(OrderAction.ASK).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.RISK_NSF);
+                        });
 
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (100_000_000L));
-        //            assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //        });
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 100_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Count == 0, true);
+                });
 
-        //        // submit order again - should be placed
-        //        container.submitCommandSync(
-        //                ApiPlaceOrder.builder().uid(UID_1).orderId(202).price(30_000).size(1000).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.PLACE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (202L));
-        //            Assert.AreEqual(cmd.uid, is (UID_1));
-        //            Assert.AreEqual(cmd.price, is (30_000L));
-        //            Assert.AreEqual(cmd.size, is (1000L));
-        //            Assert.AreEqual(cmd.action, is (ASK));
-        //            Assert.AreEqual(cmd.orderType, is (GTC));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // submit order again - should be placed
+                container.submitCommandSync(
+                        ApiPlaceOrder.Builder().uid(TestConstants.UID_1).orderId(202).price(30_000).size(1000).action(OrderAction.ASK).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.PLACE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 202L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                            Assert.AreEqual(cmd.Price, 30_000L);
+                            Assert.AreEqual(cmd.Size, 1000L);
+                            Assert.AreEqual(cmd.Action, OrderAction.ASK);
+                            Assert.AreEqual(cmd.OrderType, OrderType.GTC);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (0L));
-        //            assertTrue(profile.fetchIndexedOrders().containsKey(202L));
-        //        });
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().ContainsKey(202L), true);
+                });
 
-        //        // move order to higher price - shouldn't be a problem for ASK order
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(40_000).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.MOVE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (202L));
-        //            Assert.AreEqual(cmd.uid, is (UID_1));
-        //            Assert.AreEqual(cmd.price, is (40_000L));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // move order to higher price - shouldn't be a problem for ASK order
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_1).orderId(202).newPrice(40_000).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.MOVE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 202L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                            Assert.AreEqual(cmd.Price, 40_000L);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (0L));
-        //            assertTrue(profile.fetchIndexedOrders().containsKey(202L));
-        //        });
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().ContainsKey(202L), true);
+                });
 
-        //        // move order to lower price - shouldn't be a problem as well for ASK order
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(20_000).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.MOVE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (202L));
-        //            Assert.AreEqual(cmd.uid, is (UID_1));
-        //            Assert.AreEqual(cmd.price, is (20_000L));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // move order to lower price - shouldn't be a problem as well for ASK order
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_1).orderId(202).newPrice(20_000).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.MOVE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 202L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                            Assert.AreEqual(cmd.Price, 20_000L);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (0L));
-        //            assertTrue(profile.fetchIndexedOrders().containsKey(202L));
-        //        });
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().ContainsKey(202L), true);
+                });
 
-        //        // create user
-        //        container.createUserWithMoney(UID_2, CURRENECY_XBT, 94_000_000); // 94M satoshi (0.94 BTC)
+                // create user
+                container.createUserWithMoney(TestConstants.UID_2, TestConstants.CURRENECY_XBT, 94_000_000); // 94M satoshi (0.94 BTC)
 
-        //        // try submit order with reservePrice above funds limit - rejected
-        //        container.submitCommandSync(
-        //                ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(19_000).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.RISK_NSF));
-        //        });
+                // try submit order with reservePrice above funds limit - rejected
+                container.submitCommandSync(
+                        ApiPlaceOrder.Builder().uid(TestConstants.UID_2).orderId(203).price(18_000).reservePrice(19_000).size(500).action(OrderAction.BID).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.RISK_NSF);
+                        });
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (94_000_000L));
-        //            assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 94_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Count == 0, true);
+                });
 
-        //        // submit order with reservePrice below funds limit - should be placed
-        //        container.submitCommandSync(
-        //                ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.PLACE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (203L));
-        //            Assert.AreEqual(cmd.uid, is (UID_2));
-        //            Assert.AreEqual(cmd.price, is (18_000L));
-        //            Assert.AreEqual(cmd.reserveBidPrice, is (18_500L));
-        //            Assert.AreEqual(cmd.size, is (500L));
-        //            Assert.AreEqual(cmd.action, is (OrderAction.BID));
-        //            Assert.AreEqual(cmd.orderType, is (GTC));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // submit order with reservePrice below funds limit - should be placed
+                container.submitCommandSync(
+                        ApiPlaceOrder.Builder().uid(TestConstants.UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.PLACE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 203L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_2);
+                            Assert.AreEqual(cmd.Price, 18_000L);
+                            Assert.AreEqual(cmd.ReserveBidPrice, 18_500L);
+                            Assert.AreEqual(cmd.Size, 500L);
+                            Assert.AreEqual(cmd.Action, OrderAction.BID);
+                            Assert.AreEqual(cmd.OrderType, OrderType.GTC);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
 
-        //        // expected balance when 203 placed with reserve price 18_500
-        //        final long ethUid2 = 94_000_000L - 18_500 * 500 * SYMBOLSPEC_ETH_XBT.getQuoteScaleK();
+                // expected balance when 203 placed with reserve price 18_500
+                long ethUid2 = 94_000_000L - 18_500 * 500 * TestConstants.SYMBOLSPEC_ETH_XBT.QuoteScaleK;
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (ethUid2));
-        //            assertTrue(profile.fetchIndexedOrders().containsKey(203L));
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], ethUid2);
+                    Assert.AreEqual(profile.fetchIndexedOrders().ContainsKey(203L), true);
+                });
 
-        //        // move order to lower price - shouldn't be a problem for BID order
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(15_000).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.MOVE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (203L));
-        //            Assert.AreEqual(cmd.uid, is (UID_2));
-        //            Assert.AreEqual(cmd.price, is (15_000L));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // move order to lower price - shouldn't be a problem for BID order
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_2).orderId(203).newPrice(15_000).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.MOVE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 203L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_2);
+                            Assert.AreEqual(cmd.Price, 15_000L);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (ethUid2));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(203L).price, is (15_000L));
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], ethUid2);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[203L].Price, 15_000L);
+                });
 
-        //        // move order to higher price (above limit) - should be rejected
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(18_501).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.MATCHING_MOVE_FAILED_PRICE_OVER_RISK_LIMIT));
-        //        });
+                // move order to higher price (above limit) - should be rejected
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_2).orderId(203).newPrice(18_501).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.MATCHING_MOVE_FAILED_PRICE_OVER_RISK_LIMIT);
+                        });
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (ethUid2));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(203L).price, is (15_000L));
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], ethUid2);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[203L].Price, 15_000L);
+                });
 
-        //        // move order to higher price (equals limit) - should be accepted
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(18_500).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.MOVE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (203L));
-        //            Assert.AreEqual(cmd.uid, is (UID_2));
-        //            Assert.AreEqual(cmd.price, is (18_500L));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
-        //            Assert.IsNull(cmd.matcherEvent);
-        //        });
+                // move order to higher price (equals limit) - should be accepted
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_2).orderId(203).newPrice(18_500).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.MOVE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 203L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_2);
+                            Assert.AreEqual(cmd.Price, 18_500L);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
+                            Assert.IsNull(cmd.MatcherEvent);
+                        });
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (ethUid2));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(203L).price, is (18_500L));
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], ethUid2);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[203L].Price, 18_500L);
+                });
 
-        //        // set second order price to 17'500
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(17_500).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //        });
+                // set second order price to 17'500
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_2).orderId(203).newPrice(17_500).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                        });
 
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (ethUid2));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(203L).price, is (17_500L));
-        //        });
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], ethUid2);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[203L].Price, 17_500L);
+                });
 
-        //        // move ASK order to lower price 16'900 so it will trigger trades (by maker's price 17_500)
-        //        container.submitCommandSync(
-        //                ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(16_900).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.MOVE_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (202L));
-        //            Assert.AreEqual(cmd.uid, is (UID_1));
-        //            Assert.AreEqual(cmd.price, is (16_900L));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
+                // move ASK order to lower price 16'900 so it will trigger trades (by maker's price 17_500)
+                container.submitCommandSync(
+                        ApiMoveOrder.Builder().uid(TestConstants.UID_1).orderId(202).newPrice(16_900).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.MOVE_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 202L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                            Assert.AreEqual(cmd.Price, 16_900L);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
 
-        //            Assert.AreEqual(cmd.action, is (ASK));
+                            Assert.AreEqual(cmd.Action, OrderAction.ASK);
 
-        //            final MatcherTradeEvent evt = cmd.matcherEvent;
-        //            assertNotNull(evt);
-        //            Assert.AreEqual(evt.eventType, is (MatcherEventType.TRADE));
-        //            Assert.AreEqual(evt.activeOrderCompleted, is (false));
-        //            Assert.AreEqual(evt.matchedOrderId, is (203L));
-        //            Assert.AreEqual(evt.matchedOrderUid, is (UID_2));
-        //            Assert.AreEqual(evt.matchedOrderCompleted, is (true));
-        //            Assert.AreEqual(evt.price, is (17_500L)); // user price from maker order
-        //            Assert.AreEqual(evt.bidderHoldPrice, is (18_500L)); // user original reserve price from bidder order (203)
-        //            Assert.AreEqual(evt.size, is (500L));
-        //        });
+                            MatcherTradeEvent evt = cmd.MatcherEvent;
+                            Assert.NotNull(evt);
+                            Assert.AreEqual(evt.EventType, MatcherEventType.TRADE);
+                            Assert.AreEqual(evt.ActiveOrderCompleted, false);
+                            Assert.AreEqual(evt.MatchedOrderId, 203L);
+                            Assert.AreEqual(evt.MatchedOrderUid, TestConstants.UID_2);
+                            Assert.AreEqual(evt.MatchedOrderCompleted, true);
+                            Assert.AreEqual(evt.Price, 17_500L); // user price from maker order
+                            Assert.AreEqual(evt.BidderHoldPrice, 18_500L); // user original reserve price from bidder order (203)
+                            Assert.AreEqual(evt.Size, 500L);
+                        });
 
-        //        // check UID_1 has 87.5M satoshi (17_500 * 10 * 500) and half-filled SELL order
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (87_500_000L));
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (0L));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(202L).filled, is (500L));
-        //        });
+                // check UID_1 has 87.5M satoshi (17_500 * 10 * 500) and half-filled SELL order
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 87_500_000L);
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 0L);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[202L].Filled, 500L);
+                });
 
-        //        // check UID_2 has 6.5M satoshi (after 94M), and 50M szabo (10_000 * 500)
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (6_500_000L));
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (50_000_000L));
-        //            assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //        });
+                // check UID_2 has 6.5M satoshi (after 94M), and 50M szabo (10_000 * 500)
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 6_500_000L);
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 50_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Count == 0, true);
+                });
 
-        //        // cancel remaining order
-        //        container.submitCommandSync(
-        //                ApiCancelOrder.builder().orderId(202).uid(UID_1).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.CANCEL_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (202L));
-        //            Assert.AreEqual(cmd.uid, is (UID_1));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
+                // cancel remaining order
+                container.submitCommandSync(
+                        ApiCancelOrder.Builder().orderId(202).uid(TestConstants.UID_1).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.CANCEL_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 202L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_1);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
 
-        //            Assert.AreEqual(cmd.action, is (ASK));
+                            Assert.AreEqual(cmd.Action, OrderAction.ASK);
 
-        //            final MatcherTradeEvent evt = cmd.matcherEvent;
-        //            assertNotNull(evt);
-        //            Assert.AreEqual(evt.eventType, is (MatcherEventType.REDUCE));
-        //            Assert.AreEqual(evt.size, is (500L));
-        //        });
+                            MatcherTradeEvent evt = cmd.MatcherEvent;
+                            Assert.NotNull(evt);
+                            Assert.AreEqual(evt.EventType, MatcherEventType.REDUCE);
+                            Assert.AreEqual(evt.Size, 500L);
+                        });
 
-        //        // check UID_1 has 87.5M satoshi (17_500 * 10 * 500) and 50M szabo (after 100M)
-        //        container.validateUserState(UID_1, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (87_500_000L));
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_ETH), is (50_000_000L));
-        //            assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //        });
+                // check UID_1 has 87.5M satoshi (17_500 * 10 * 500) and 50M szabo (after 100M)
+                container.validateUserState(TestConstants.UID_1, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 87_500_000L);
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_ETH], 50_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Count == 0, true);
+                });
 
-        //        assertTrue(container.totalBalanceReport().isGlobalBalancesAllZero());
-        //    }
-        //}
+                Assert.AreEqual(container.totalBalanceReport().isGlobalBalancesAllZero(), true);
+            }
+        }
 
-        //[Test, Timeout(5000)]
-        //public void exchangeCancelBid() throws Exception
-        //{
+        [Test, Timeout(5000)]
+        public void exchangeCancelBid()
+        {
 
-        //                        using (final ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration())) {
-        //        container.initBasicSymbols();
+            using (ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration()))
+            {
+                container.initBasicSymbols();
 
-        //        // create user
-        //        container.createUserWithMoney(UID_2, CURRENECY_XBT, 94_000_000); // 94M satoshi (0.94 BTC)
+                // create user
+                container.createUserWithMoney(TestConstants.UID_2, TestConstants.CURRENECY_XBT, 94_000_000); // 94M satoshi (0.94 BTC)
 
-        //        // submit order with reservePrice below funds limit - should be placed
-        //        container.submitCommandSync(
-        //                ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //        });
+                // submit order with reservePrice below funds limit - should be placed
+                container.submitCommandSync(
+                        ApiPlaceOrder.Builder().uid(TestConstants.UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(OrderType.GTC).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                        });
 
-        //        // verify order placed with correct reserve price and account balance is updated accordingly
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (94_000_000L - 18_500 * 500 * SYMBOLSPEC_ETH_XBT.getQuoteScaleK()));
-        //            Assert.AreEqual(profile.fetchIndexedOrders().get(203L).reserveBidPrice, is (18_500L));
-        //        });
+                // verify order placed with correct reserve price and account balance is updated accordingly
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 94_000_000L - 18_500 * 500 * TestConstants.SYMBOLSPEC_ETH_XBT.QuoteScaleK);
+                    Assert.AreEqual(profile.fetchIndexedOrders()[203L].ReserveBidPrice, 18_500L);
+                });
 
-        //        // cancel remaining order
-        //        container.submitCommandSync(
-        //                ApiCancelOrder.builder().orderId(203).uid(UID_2).symbol(SYMBOL_EXCHANGE).build(),
-        //                cmd-> {
-        //            Assert.AreEqual(cmd.resultCode, is (CommandResultCode.SUCCESS));
-        //            Assert.AreEqual(cmd.command, is (OrderCommandType.CANCEL_ORDER));
-        //            Assert.AreEqual(cmd.orderId, is (203L));
-        //            Assert.AreEqual(cmd.uid, is (UID_2));
-        //            Assert.AreEqual(cmd.symbol, is (SYMBOL_EXCHANGE));
+                // cancel remaining order
+                container.submitCommandSync(
+                        ApiCancelOrder.Builder().orderId(203).uid(TestConstants.UID_2).symbol(TestConstants.SYMBOL_EXCHANGE).build(),
+                        cmd =>
+                        {
+                            Assert.AreEqual(cmd.ResultCode, CommandResultCode.SUCCESS);
+                            Assert.AreEqual(cmd.Command, OrderCommandType.CANCEL_ORDER);
+                            Assert.AreEqual(cmd.OrderId, 203L);
+                            Assert.AreEqual(cmd.Uid, TestConstants.UID_2);
+                            Assert.AreEqual(cmd.Symbol, TestConstants.SYMBOL_EXCHANGE);
 
-        //            Assert.AreEqual(cmd.action, is (OrderAction.BID));
+                            Assert.AreEqual(cmd.Action, OrderAction.BID);
 
-        //            final MatcherTradeEvent evt = cmd.matcherEvent;
-        //            assertNotNull(evt);
-        //            Assert.AreEqual(evt.eventType, is (MatcherEventType.REDUCE));
-        //            Assert.AreEqual(evt.bidderHoldPrice, is (18_500L));
-        //            Assert.AreEqual(evt.size, is (500L));
-        //        });
+                            MatcherTradeEvent evt = cmd.MatcherEvent;
+                            Assert.NotNull(evt);
+                            Assert.AreEqual(evt.EventType, MatcherEventType.REDUCE);
+                            Assert.AreEqual(evt.BidderHoldPrice, 18_500L);
+                            Assert.AreEqual(evt.Size, 500L);
+                        });
 
-        //        // verify that all 94M satoshi were returned back
-        //        container.validateUserState(UID_2, profile-> {
-        //            Assert.AreEqual(profile.getAccounts().get(CURRENECY_XBT), is (94_000_000L));
-        //            assertTrue(profile.fetchIndexedOrders().isEmpty());
-        //        });
+                // verify that all 94M satoshi were returned back
+                container.validateUserState(TestConstants.UID_2, profile =>
+                {
+                    Assert.AreEqual(profile.Accounts[TestConstants.CURRENECY_XBT], 94_000_000L);
+                    Assert.AreEqual(profile.fetchIndexedOrders().Count == 0, true);
+                });
 
-        //        assertTrue(container.totalBalanceReport().isGlobalBalancesAllZero());
-        //    }
-        //}
+                Assert.AreEqual(container.totalBalanceReport().isGlobalBalancesAllZero(), true);
+            }
+        }
     }
 }

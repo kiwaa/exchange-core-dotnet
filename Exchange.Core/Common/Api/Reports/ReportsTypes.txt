@@ -7,3 +7,11 @@
     Dictionary<int,long> openInterestLong
     Dictionary<int,long> openInterestShort
 
+SingleUserReportResult :
+    long uid
+    UserStatus userStatus
+    Dictionary<int,long> accounts
+    Dictionary<int,Position> positions
+    Dictionary<int,List<Order>> orders
+    QueryExecutionStatus queryExecutionStatus
+

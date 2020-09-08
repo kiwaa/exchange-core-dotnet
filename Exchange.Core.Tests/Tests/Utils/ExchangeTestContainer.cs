@@ -25,10 +25,10 @@ namespace Exchange.Core.Tests.Utils
         private ExchangeApi api { get; }
         //private readonly AffinityThreadFactory threadFactory { get; }
 
-        //private AtomicLong uniqueIdCounterLong = new AtomicLong();
+        private long uniqueIdCounterLong = 0;
         private volatile int uniqueIdCounterInt = 0;
 
-        private Action<OrderCommand, long> consumer { get; set; } = (cmd, seq) => { };
+        public Action<OrderCommand, long> consumer { get; set; } = (cmd, seq) => { };
 
         public static readonly Action<OrderCommand> CHECK_SUCCESS = cmd => Assert.AreEqual(CommandResultCode.SUCCESS, cmd.ResultCode);
 
@@ -97,7 +97,7 @@ namespace Exchange.Core.Tests.Utils
                     .build();
 
             this.exchangeCore = ExchangeCore.Builder()
-                    .resultsConsumer(consumer)
+                    .resultsConsumer((cmd,seq) => consumer(cmd, seq))
                     .exchangeConfiguration(exchangeConfiguration)
                     .build();
 
@@ -154,13 +154,13 @@ namespace Exchange.Core.Tests.Utils
             Assert.AreEqual(api.submitCommandAsync(ApiAdjustUserBalance.Builder().uid(uid).transactionId(4L).amount(1000_0000_0000L).currency(TestConstants.CURRENECY_LTC).build()).Result, CommandResultCode.SUCCESS);
         }
 
-        //public void createUserWithMoney(long uid, int currency, long amount)
-        //{
-        //    List<ApiCommand> cmds = new List<ApiCommand>();
-        //    cmds.Add(ApiAddUser.Builder().uid(uid).build());
-        //    cmds.Add(ApiAdjustUserBalance.Builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
-        //    api.submitCommandsSync(cmds);
-        //}
+        public void createUserWithMoney(long uid, int currency, long amount)
+        {
+            List<ApiCommand> cmds = new List<ApiCommand>();
+            cmds.Add(ApiAddUser.Builder().uid(uid).build());
+            cmds.Add(ApiAdjustUserBalance.Builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
+            api.submitCommandsSync(cmds);
+        }
 
         //public void addMoneyToUser(long uid, int currency, long amount)
         //{
@@ -201,10 +201,10 @@ namespace Exchange.Core.Tests.Utils
             return Interlocked.Increment(ref uniqueIdCounterInt);
         }
 
-        //private long getRandomTransactionId()
-        //{
-        //    return uniqueIdCounterLong.incrementAndGet();
-        //}
+        private long getRandomTransactionId()
+        {
+            return Interlocked.Increment(ref uniqueIdCounterLong);
+        }
 
         //public void userAccountsInit(List<BitSet> userCurrencies)
         //{
@@ -280,17 +280,17 @@ namespace Exchange.Core.Tests.Utils
             return api.requestOrderBookAsync(symbol, -1).Result;
         }
 
-        //// todo rename
-        //public void validateUserState(long uid, Action<SingleUserReportResult> resultValidator)
-        //{
-        //    var result = getUserProfile(uid);
-        //    resultValidator(result);
-        //}
+        // todo rename
+        public void validateUserState(long uid, Action<SingleUserReportResult> resultValidator)
+        {
+            var result = getUserProfile(uid);
+            resultValidator(result);
+        }
 
-        //public SingleUserReportResult getUserProfile(long clientId)
-        //{
-        //    return api.processReport(new SingleUserReportQuery(clientId), getRandomTransferId()).get();
-        //}
+        public SingleUserReportResult getUserProfile(long clientId)
+        {
+            return api.processReport(new SingleUserReportQuery(clientId), getRandomTransferId()).Result;
+        }
 
         public TotalCurrencyBalanceReportResult totalBalanceReport()
         {

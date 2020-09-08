@@ -1,41 +1,91 @@
 ﻿using Exchange.Core.Processors;
 using OpenHFT.Chronicle.WireMock;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Exchange.Core.Common.Api.Reports
 {
-    internal class SingleUserReportQuery : IReportQuery<SingleUserReportResult>
+    public sealed partial class SingleUserReportQuery : IReportQuery<SingleUserReportResult>
     {
-        private int v;
+        private long uid;
 
-        public SingleUserReportQuery(int v)
+        public SingleUserReportQuery(long uid)
         {
-            this.v = v;
+            this.uid = uid;
+        }
+        public SingleUserReportQuery(IBytesIn bytesIn)
+        {
+            this.uid = bytesIn.readLong();
         }
 
         public SingleUserReportResult createResult(IEnumerable<IBytesIn> sections)
         {
-            throw new System.NotImplementedException();
+            return SingleUserReportResult.merge(sections);
         }
+
 
         public int getReportTypeCode()
         {
-            throw new System.NotImplementedException();
+            return (int)ReportType.SINGLE_USER_REPORT;
         }
 
         public SingleUserReportResult process(MatchingEngineRouter matchingEngine)
         {
-            throw new System.NotImplementedException();
+            Dictionary<int, List<Order>> orders = new Dictionary<int, List<Order>>();
+
+            foreach (var ob in matchingEngine.orderBooks)
+            {
+                List<Order> userOrders = ob.Value.findUserOrders(this.uid);
+                // dont put empty results, so that the report result merge procedure would be simple
+                if (userOrders.Any())
+                {
+                    orders[ob.Value.getSymbolSpec().SymbolId] = userOrders;
+                }
+            }
+
+            //log.debug("ME{}: orders: {}", matchingEngine.getShardId(), orders);
+            return SingleUserReportResult.createFromMatchingEngine(uid, orders);
         }
 
         public SingleUserReportResult process(RiskEngine riskEngine)
         {
-            throw new System.NotImplementedException();
+            if (!riskEngine.uidForThisHandler(this.uid))
+            {
+                return null;
+            }
+            UserProfile userProfile = riskEngine.userProfileService.getUserProfile(this.uid);
+
+            if (userProfile != null)
+            {
+                Dictionary<int, Position> positions = new Dictionary<int, Position>(userProfile.positions.Count);
+                foreach (var (symbol, pos) in userProfile.positions)
+                {
+                    positions[symbol] = new Position(
+                            pos.currency,
+                            pos.direction,
+                            pos.openVolume,
+                            pos.openPriceSum,
+                            pos.profit,
+                            pos.pendingSellSize,
+                            pos.pendingBuySize);
+                }
+
+                return SingleUserReportResult.createFromRiskEngineFound(
+                        uid,
+                        userProfile.userStatus,
+                        userProfile.accounts,
+                        positions);
+            }
+            else
+            {
+                // not found
+                return SingleUserReportResult.createFromRiskEngineNotFound(uid);
+            }
         }
 
         public void writeMarshallable(IBytesOut bytes)
         {
-            throw new System.NotImplementedException();
+            bytes.writeLong(uid);
         }
     }
 }

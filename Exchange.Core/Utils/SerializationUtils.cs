@@ -28,7 +28,7 @@ namespace Exchange.Core.Utils
 
         public static long[] bytesToLongArrayLz4(LZ4Compressor lz4Compressor, NativeBytes bytes, int padding)
         {
-            int originalSize = (int)bytes.readRemaining(); 
+            int originalSize = (int)bytes.readRemaining();
             //        log.debug("COMPRESS originalSize={}", originalSize);
 
             //ByteBuffer byteBuffer = ByteBuffer.allocate(originalSize);
@@ -384,22 +384,22 @@ namespace Exchange.Core.Utils
         //    return map;
         //}
 
-        //public static <T extends WriteBytesMarshallable> void marshallList(final List<T> list, final BytesOut bytes)
-        //{
-        //    bytes.writeInt(list.size());
-        //    list.forEach(v->v.writeMarshallable(bytes));
-        //}
+        public static void marshallList<T>(List<T> list, IBytesOut bytes) where T : IWriteBytesMarshallable 
+        {
+            bytes.writeInt(list.Count);
+            list.ForEach(v=>v.writeMarshallable(bytes));
+        }
 
-        //public static <T> List<T> readList(final BytesIn bytes, final Function<BytesIn, T> creator)
-        //{
-        //    final int length = bytes.readInt();
-        //    final List<T> list = new ArrayList<>(length);
-        //    for (int i = 0; i < length; i++)
-        //    {
-        //        list.add(creator.apply(bytes));
-        //    }
-        //    return list;
-        //}
+        public static List<T> readList<T>(IBytesIn bytes, Func<IBytesIn, T> creator)
+        {
+            int length = bytes.readInt();
+            List<T> list = new List<T>(length);
+            for (int i = 0; i < length; i++)
+            {
+                list.Add(creator(bytes));
+            }
+            return list;
+        }
 
         public static void marshallNullable<T>(T obj, IBytesOut bytes, Action<T, IBytesOut> marshaller)
         {
@@ -410,39 +410,41 @@ namespace Exchange.Core.Utils
             }
         }
 
-        //public static <T> T preferNotNull(final T a, final T b)
-        //{
-        //    return a == null ? b : a;
-        //}
+        public static T preferNotNull<T>(T a, T b)
+        {
+            return a == null ? b : a;
+        }
 
         public static T readNullable<T>(IBytesIn bytesIn, Func<IBytesIn, T> creator)
         {
             return bytesIn.readBool() ? creator(bytesIn) : default;
         }
 
-        //public static <V> LongObjectHashMap<V> mergeOverride(final LongObjectHashMap<V> a, final LongObjectHashMap<V> b)
-        //{
-        //    final LongObjectHashMap<V> res = a == null ? new LongObjectHashMap<>() : new LongObjectHashMap<>(a);
-        //    if (b != null)
-        //    {
-        //        res.putAll(b);
-        //    }
-        //    return res;
-        //}
+        public static Dictionary<long, V> mergeOverride<V>(Dictionary<long, V> a, Dictionary<long, V> b)
+        {
+            Dictionary<long, V> res = a == null ? new Dictionary<long, V>() : new Dictionary<long, V>(a);
+            if (b != null)
+            {
+                foreach (var pair in b)
+                    res[pair.Key] = pair.Value;
+            }
+            return res;
+        }
 
-        //public static <V> IntObjectHashMap<V> mergeOverride(final IntObjectHashMap<V> a, final IntObjectHashMap<V> b)
-        //{
-        //    final IntObjectHashMap<V> res = a == null ? new IntObjectHashMap<>() : new IntObjectHashMap<>(a);
-        //    if (b != null)
-        //    {
-        //        res.putAll(b);
-        //    }
-        //    return res;
-        //}
+        public static Dictionary<int, V> mergeOverride<V>(Dictionary<int, V> a, Dictionary<int, V> b)
+        {
+            Dictionary<int, V> res = a == null ? new Dictionary<int, V>() : new Dictionary<int, V>(a);
+            if (b != null)
+            {
+                foreach (var pair in b)
+                    res[pair.Key] = pair.Value;
+            }
+            return res;
+        }
 
         public static Dictionary<int, long> mergeSum(params Dictionary<int, long>[] maps)
         {
-            Dictionary<int,long> res = null;
+            Dictionary<int, long> res = null;
             foreach (Dictionary<int, long> map in maps)
             {
                 if (map != null)

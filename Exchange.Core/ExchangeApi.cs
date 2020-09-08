@@ -11,6 +11,7 @@ using log4net;
 using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -61,6 +62,42 @@ namespace Exchange.Core
                 consumer(cmd);
             }
         }
+        public void submitCommand(ApiCommand cmd)
+        {
+            //log.debug("{}", cmd);
+
+            if (cmd is ApiMoveOrder) {
+                ringBuffer.PublishEvent(MoveOrderTranslator.Instance, (ApiMoveOrder)cmd);
+            } else if (cmd is ApiPlaceOrder) {
+                ringBuffer.PublishEvent(NewOrderTranslator.Instance, (ApiPlaceOrder)cmd);
+            //} else if (cmd is ApiCancelOrder) {
+            //    ringBuffer.publishEvent(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder)cmd);
+            //} else if (cmd is ApiReduceOrder) {
+            //    ringBuffer.publishEvent(REDUCE_ORDER_TRANSLATOR, (ApiReduceOrder)cmd);
+            //} else if (cmd is ApiOrderBookRequest) {
+            //    ringBuffer.publishEvent(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest)cmd);
+            } else if (cmd is ApiAddUser) {
+                ringBuffer.PublishEvent(AddUserTranslator.Instance, (ApiAddUser)cmd);
+            } else if (cmd is ApiAdjustUserBalance) {
+                ringBuffer.PublishEvent(AdjustUserBalanceTranslator.Instance, (ApiAdjustUserBalance)cmd);
+            //} else if (cmd is ApiResumeUser) {
+            //    ringBuffer.publishEvent(RESUME_USER_TRANSLATOR, (ApiResumeUser)cmd);
+            //} else if (cmd is ApiSuspendUser) {
+            //    ringBuffer.publishEvent(SUSPEND_USER_TRANSLATOR, (ApiSuspendUser)cmd);
+            } else if (cmd is ApiBinaryDataCommand) {
+                publishBinaryData((ApiBinaryDataCommand)cmd, seq=> { });
+            //} else if (cmd is ApiPersistState) {
+            //    publishPersistCmd((ApiPersistState)cmd, (seq1, seq2)-> {
+            //    });
+            //} else if (cmd is ApiReset) {
+            //    ringBuffer.publishEvent(RESET_TRANSLATOR, (ApiReset)cmd);
+            //} else if (cmd is ApiNop) {
+            //    ringBuffer.publishEvent(NOP_TRANSLATOR, (ApiNop)cmd);
+            } else
+            {
+                throw new InvalidOperationException("Unsupported command type: " + cmd.GetType().Name);
+            }
+        }
 
         public Task<CommandResultCode> submitCommandAsync(ApiCommand cmd)
         {
@@ -70,10 +107,10 @@ namespace Exchange.Core
             {
                 return submitCommandAsync(MoveOrderTranslator.Instance, (ApiMoveOrder)cmd);
             }
-            //else if (cmd is ApiPlaceOrder)
-            //{
-            //    return submitCommandAsync(NEW_ORDER_TRANSLATOR, (ApiPlaceOrder)cmd);
-            //}
+            else if (cmd is ApiPlaceOrder)
+            {
+                return submitCommandAsync(NewOrderTranslator.Instance, (ApiPlaceOrder)cmd);
+            }
             //else if (cmd is ApiCancelOrder)
             //{
             //    return submitCommandAsync(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder)cmd);
@@ -150,16 +187,22 @@ namespace Exchange.Core
             else if (cmd is ApiPlaceOrder)
             {
                 return submitCommandAsyncFullResponse(NewOrderTranslator.Instance, (ApiPlaceOrder)cmd);
-                //} else if (cmd is ApiCancelOrder) {
-                //    return submitCommandAsyncFullResponse(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder)cmd);
+            }
+            else if (cmd is ApiCancelOrder)
+            {
+                return submitCommandAsyncFullResponse(CancelOrderTranslator.Instance, (ApiCancelOrder)cmd);
                 //} else if (cmd is ApiReduceOrder) {
                 //    return submitCommandAsyncFullResponse(REDUCE_ORDER_TRANSLATOR, (ApiReduceOrder)cmd);
                 //} else if (cmd is ApiOrderBookRequest) {
                 //    return submitCommandAsyncFullResponse(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest)cmd);
-                //} else if (cmd is ApiAddUser) {
-                //    return submitCommandAsyncFullResponse(ADD_USER_TRANSLATOR, (ApiAddUser)cmd);
-                //} else if (cmd is ApiAdjustUserBalance) {
-                //    return submitCommandAsyncFullResponse(ADJUST_USER_BALANCE_TRANSLATOR, (ApiAdjustUserBalance)cmd);
+            }
+            else if (cmd is ApiAddUser)
+            {
+                return submitCommandAsyncFullResponse(AddUserTranslator.Instance, (ApiAddUser)cmd);
+            }
+            else if (cmd is ApiAdjustUserBalance)
+            {
+                return submitCommandAsyncFullResponse(AdjustUserBalanceTranslator.Instance, (ApiAdjustUserBalance)cmd);
                 //} else if (cmd is ApiResumeUser) {
                 //    return submitCommandAsyncFullResponse(RESUME_USER_TRANSLATOR, (ApiResumeUser)cmd);
                 //} else if (cmd is ApiSuspendUser) {
@@ -173,6 +216,19 @@ namespace Exchange.Core
             {
                 throw new InvalidOperationException("Unsupported command type: " + cmd.GetType().Name);
             }
+        }
+
+        public void submitCommandsSync<T>(List<T> cmd) where T : ApiCommand
+        {
+            if (cmd.Count == 0)
+            {
+                return;
+            }
+
+            //cmd.subList(0, cmd.size() - 1).forEach(this::submitCommand);
+            for (int i = 0; i < cmd.Count - 1; i++)
+                submitCommand(cmd[i]);
+            submitCommandAsync(cmd[cmd.Count - 1]).Wait();
         }
 
         public Task<L2MarketData> requestOrderBookAsync(int symbolId, int depth)
@@ -419,6 +475,19 @@ namespace Exchange.Core
             }
         };
 
+        private class CancelOrderTranslator : IEventTranslatorOneArg<OrderCommand, ApiCancelOrder>
+        {
+            public static readonly CancelOrderTranslator Instance = new CancelOrderTranslator();
+            public void TranslateTo(OrderCommand cmd, long seq, ApiCancelOrder api)
+            {
+                cmd.Command = OrderCommandType.CANCEL_ORDER;
+                cmd.OrderId = api.OrderId;
+                cmd.Symbol = api.Symbol;
+                cmd.Uid = api.Uid;
+                cmd.Timestamp = api.Timestamp;
+                cmd.ResultCode = CommandResultCode.NEW;
+            }
+        };
         private class MoveOrderTranslator : IEventTranslatorOneArg<OrderCommand, ApiMoveOrder>
         {
             public static readonly MoveOrderTranslator Instance = new MoveOrderTranslator();
@@ -468,14 +537,6 @@ namespace Exchange.Core
 
 
 
-    //private static final EventTranslatorOneArg<OrderCommand, ApiCancelOrder> CANCEL_ORDER_TRANSLATOR = (cmd, seq, api)-> {
-    //    cmd.command = OrderCommandType.CANCEL_ORDER;
-    //    cmd.orderId = api.orderId;
-    //    cmd.symbol = api.symbol;
-    //    cmd.uid = api.uid;
-    //    cmd.timestamp = api.timestamp;
-    //    cmd.resultCode = CommandResultCode.NEW;
-    //};
 
     //private static final EventTranslatorOneArg<OrderCommand, ApiReduceOrder> REDUCE_ORDER_TRANSLATOR = (cmd, seq, api)-> {
     //    cmd.command = OrderCommandType.REDUCE_ORDER;

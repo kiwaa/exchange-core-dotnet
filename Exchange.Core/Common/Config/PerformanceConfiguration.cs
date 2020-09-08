@@ -8,7 +8,21 @@ namespace Exchange.Core.Common.Config
     {
         public static readonly PerformanceConfiguration DEFAULT = baseBuilder().build();
 
+        public static PerformanceConfiguration.PerformanceConfigurationBuilder latencyPerformanceBuilder()
+        {
 
+            return Builder()
+                    .ringBufferSize(2 * 1024)
+                    .matchingEnginesNum(1)
+                    .riskEnginesNum(1)
+                    .msgsInGroupLimit(256)
+                    .maxGroupDurationNs(10_000)
+                    //                    .taskScheduler(new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE))
+                    .taskScheduler(TaskScheduler.Default)
+                    .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
+                    .binaryCommandsLz4CompressorFactory(()=> new LZ4Compressor())
+                    .orderBookFactory((spec, pool, helper, loggingCfg) => new OrderBookDirectImpl(spec, pool, helper, loggingCfg));
+        }
         public override string ToString()
         {
             return "PerformanceConfiguration{" +

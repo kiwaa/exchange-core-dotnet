@@ -85,6 +85,80 @@ namespace Exchange.Core.Common.Api.Reports
             }
         }
     }
+    public sealed partial class SingleUserReportResult : ApiCommand, IEquatable<SingleUserReportResult>
+    {
+        public long Uid { get; }
+        public UserStatus UserStatus { get; }
+        public Dictionary<int,long> Accounts { get; }
+        public Dictionary<int,Position> Positions { get; }
+        public Dictionary<int,List<Order>> Orders { get; }
+        public QueryExecutionStatus QueryExecutionStatus { get; }
+        public SingleUserReportResult(long uid, UserStatus userStatus, Dictionary<int,long> accounts, Dictionary<int,Position> positions, Dictionary<int,List<Order>> orders, QueryExecutionStatus queryExecutionStatus)
+        {
+            Uid = uid;
+            UserStatus = userStatus;
+            Accounts = accounts;
+            Positions = positions;
+            Orders = orders;
+            QueryExecutionStatus = queryExecutionStatus;
+        }
+
+        public bool Equals(SingleUserReportResult other)
+        {
+              return Uid.Equals(other.Uid) && UserStatus.Equals(other.UserStatus) && Accounts.Equals(other.Accounts) && Positions.Equals(other.Positions) && Orders.Equals(other.Orders) && QueryExecutionStatus.Equals(other.QueryExecutionStatus);
+        }
+
+        public static SingleUserReportResultBuilder Builder()
+        {
+              return new SingleUserReportResultBuilder();
+        }
+
+        public sealed class SingleUserReportResultBuilder
+        {
+            private long _uid;
+            private UserStatus _userStatus;
+            private Dictionary<int,long> _accounts;
+            private Dictionary<int,Position> _positions;
+            private Dictionary<int,List<Order>> _orders;
+            private QueryExecutionStatus _queryExecutionStatus;
+
+            public SingleUserReportResultBuilder uid(long value)
+            {
+                _uid = value;
+                return this;
+            }
+            public SingleUserReportResultBuilder userStatus(UserStatus value)
+            {
+                _userStatus = value;
+                return this;
+            }
+            public SingleUserReportResultBuilder accounts(Dictionary<int,long> value)
+            {
+                _accounts = value;
+                return this;
+            }
+            public SingleUserReportResultBuilder positions(Dictionary<int,Position> value)
+            {
+                _positions = value;
+                return this;
+            }
+            public SingleUserReportResultBuilder orders(Dictionary<int,List<Order>> value)
+            {
+                _orders = value;
+                return this;
+            }
+            public SingleUserReportResultBuilder queryExecutionStatus(QueryExecutionStatus value)
+            {
+                _queryExecutionStatus = value;
+                return this;
+            }
+
+            public SingleUserReportResult build()
+            {
+                return new SingleUserReportResult(_uid, _userStatus, _accounts, _positions, _orders, _queryExecutionStatus);
+            }
+        }
+    }
 }
 
 

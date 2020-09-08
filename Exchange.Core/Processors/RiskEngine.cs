@@ -743,7 +743,7 @@ namespace Exchange.Core.Processors
                     maker.accounts[quoteCurrency] += amountDiffToReleaseInQuoteCurrency;
 
                     long gainedAmountInBaseCurrency = CoreArithmeticUtils.calculateAmountAsk(size, spec);
-                    maker.accounts[spec.BaseCurrency] += gainedAmountInBaseCurrency;
+                    maker.accounts.AddValue(spec.BaseCurrency, gainedAmountInBaseCurrency);
 
                     makerSizeForThisHandler += size;
                 }
@@ -753,12 +753,12 @@ namespace Exchange.Core.Processors
 
             if (taker != null)
             {
-                taker.accounts[quoteCurrency] += takerSizePriceForThisHandler * spec.QuoteScaleK - spec.TakerFee * takerSizeForThisHandler;
+                taker.accounts.AddValue(quoteCurrency, takerSizePriceForThisHandler * spec.QuoteScaleK - spec.TakerFee * takerSizeForThisHandler);
             }
 
             if (takerSizeForThisHandler != 0 || makerSizeForThisHandler != 0)
             {
-                fees[quoteCurrency] += spec.TakerFee * takerSizeForThisHandler + spec.MakerFee * makerSizeForThisHandler;
+                fees.AddValue(quoteCurrency, spec.TakerFee * takerSizeForThisHandler + spec.MakerFee * makerSizeForThisHandler);
             }
         }
 

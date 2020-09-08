@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Exchange.Core.Common.Api.Reports
 {
-    public sealed class StateHashReportResult : IReportResult
+    public sealed partial class StateHashReportResult : IReportResult
     {
 
         public static readonly StateHashReportResult EMPTY = new StateHashReportResult();
@@ -17,12 +17,6 @@ namespace Exchange.Core.Common.Api.Reports
         public void writeMarshallable(IBytesOut bytes)
         {
             throw new NotImplementedException();
-        }
-
-        public enum ModuleType
-        {
-            RISK_ENGINE,
-            MATCHING_ENGINE
         }
 
         internal static StateHashReportResult merge(IEnumerable<IBytesIn> sections)

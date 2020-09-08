@@ -76,7 +76,7 @@ namespace Exchange.Core.Common.Api.Reports
                 {
                     CoreSymbolSpecification spec = symbolSpecificationProvider.getSymbolSpecification(symbolId);
 //                    LastPriceCacheRecord avgPrice = dummyLastPriceCache.getIfAbsentPut(symbolId, LastPriceCacheRecord.dummy);
-                    if (dummyLastPriceCache.TryGetValue(symbolId, out LastPriceCacheRecord avgPrice))
+                    if (!dummyLastPriceCache.TryGetValue(symbolId, out LastPriceCacheRecord avgPrice))
                     {
                         dummyLastPriceCache[symbolId] = avgPrice = LastPriceCacheRecord.dummy;
                     }
