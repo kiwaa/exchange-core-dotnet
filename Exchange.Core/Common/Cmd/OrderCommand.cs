@@ -3,6 +3,7 @@ using Exchange.Core.Common.Cmd;
 using Exchange.Core.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Threading;
 
@@ -22,22 +23,22 @@ namespace Exchange.Core
 
         public int Symbol { get; set; }
 
-        public long Price { get; }
-        public long Size { get; }
+        public long Price { get; set; }
+        public long Size { get; set; }
 
         // new orders INPUT - reserved price for fast moves of GTC bid orders in exchange mode
-        public long ReserveBidPrice { get; }
+        public long ReserveBidPrice { get; set; }
 
         // required for PLACE_ORDER only;
         // for CANCEL/MOVE contains original order action (filled by orderbook)
         public OrderAction Action { get; set; }
 
-        public OrderType OrderType { get; }
+        public OrderType OrderType { get; set; }
 
-        public long Uid { get; }
+        public long Uid { get; set; }
 
-        public long Timestamp { get; }
-        public int UserCookie { get; }
+        public long Timestamp { get; set; }
+        public int UserCookie { get; set; }
         // filled by grouping processor:
 
         public long eventsGroup { get; set; }
@@ -188,15 +189,18 @@ namespace Exchange.Core
             } while (UnsafeUtils.CompareExchange(ref _resultCode, currentCode, codeToSet) != codeToSet);
         }
 
-        internal void AppendEventsVolatile(MatcherTradeEvent eventHead, MatcherTradeEvent tail)
+        internal void AppendEventsVolatile(MatcherTradeEvent eventHead)
         {
+            Debug.Assert(_matcherEvent != eventHead);
+            MatcherTradeEvent tail = eventHead.findTail();
+
             do
             {
                 // read current head and attach to the tail of new
-                tail.NextEvent = MatcherEvent;
+                tail.NextEvent = _matcherEvent;
 
                 // do a CAS operation
-            } while (Interlocked.CompareExchange(ref _matcherEvent, tail.NextEvent, eventHead) != eventHead);
+            } while (Interlocked.CompareExchange(ref _matcherEvent, eventHead, tail.NextEvent) != tail.NextEvent);
 
         }
 

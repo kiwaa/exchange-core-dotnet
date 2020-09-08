@@ -9,7 +9,8 @@ namespace OpenHFT.Chronicle.WireMock
     public interface IBytesOut
     {
         IBytesOut writeLong(long askPrice);
-        IBytesOut writeInt(object p);
+        IBytesOut writeInt(int p);
         IBytesOut writeByte(byte direction);
+        IBytesOut writeBool(bool v);
     }
 }

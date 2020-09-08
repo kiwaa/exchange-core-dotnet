@@ -29,7 +29,7 @@ namespace Exchange.Core.Common
                 case CoreWaitStrategy.YIELDING:
                     return new YieldingWaitStrategy();
                 case CoreWaitStrategy.BLOCKING:
-                    return new BlockingSpinWaitWaitStrategy();
+                    return new BlockingWaitStrategy();
                 case CoreWaitStrategy.SECOND_STEP_NO_WAIT:
                     throw new NotImplementedException();
                 default:

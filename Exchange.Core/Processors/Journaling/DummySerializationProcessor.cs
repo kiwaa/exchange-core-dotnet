@@ -15,42 +15,42 @@ namespace Exchange.Core
 
         public void enableJournaling(long afterSeq, ExchangeApi api)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public SortedDictionary<long, SnapshotDescriptor> findAllSnapshotPoints()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public T loadData<T>(long snapshotId, SerializedModuleType type, int instanceId, Func<IBytesIn, T> initFunc)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public long replayJournalFull(InitialStateConfiguration initialStateConfiguration, ExchangeApi api)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void replayJournalFullAndThenEnableJouraling(InitialStateConfiguration initialStateConfiguration, ExchangeApi exchangeApi)
         {
-            throw new NotImplementedException();
+            // nop
         }
 
         public void replayJournalStep(long snapshotId, long seqFrom, long seqTo, ExchangeApi api)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public bool storeData(long snapshotId, long seq, long timestampNs, SerializedModuleType type, int instanceId, IWriteBytesMarshallable obj)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void writeToJournal(OrderCommand cmd, long dSeq, bool eob)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

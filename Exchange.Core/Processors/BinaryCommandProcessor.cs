@@ -105,7 +105,7 @@ namespace Exchange.Core.Processors
                     if (tmp != null)
                     {
                         var res = handleReport(tmp);
-                        NativeBytes<byte> bytes = Bytes.allocateElasticDirect(128);
+                        NativeBytes bytes = Bytes.allocateElasticDirect(128);
                         res.writeMarshallable(bytes);
                         MatcherTradeEvent binaryEventsChain = eventsHelper.createBinaryEventsChain(cmd.Timestamp, section, bytes);
                         UnsafeUtils.appendEventsVolatile(cmd, binaryEventsChain);
@@ -265,6 +265,14 @@ namespace Exchange.Core.Processors
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        public static NativeBytes serializeObject(IWriteBytesMarshallable data, int objectType)
+        {
+            NativeBytes bytes = Bytes.allocateElasticDirect(128);
+            bytes.writeInt(objectType);
+            data.writeMarshallable(bytes);
+            return bytes;
         }
     }
 }

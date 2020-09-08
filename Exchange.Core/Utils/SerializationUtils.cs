@@ -1,8 +1,10 @@
-﻿using OpenHFT.Chronicle.WireMock;
+﻿using MessagePack.LZ4;
+using OpenHFT.Chronicle.WireMock;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,12 +12,12 @@ namespace Exchange.Core.Utils
 {
     public sealed class SerializationUtils
     {
-        public static long[] bytesToLongArray(NativeBytes<byte> bytes, int padding)
+        public static long[] bytesToLongArray(NativeBytes bytes, int padding)
         {
             //ByteBuffer byteBuffer = ByteBuffer.allocate();
-            using (var byteBuffer = new MemoryStream((int)bytes.readRemaining()))
+            var byteBuffer = bytes.read();
+
             {
-                bytes.read(byteBuffer);
                 byte[] array = byteBuffer.ToArray();
                 //        log.debug("array:{}", array);
                 long[] longs = toLongsArray(array, padding);
@@ -24,60 +26,69 @@ namespace Exchange.Core.Utils
             }
         }
 
-        //public static long[] bytesToLongArrayLz4(LZ4Compressor lz4Compressor, NativeBytes<Void> bytes, int padding)
-        //{
-        //    int originalSize = (int)bytes.readRemaining();
-        //    //        log.debug("COMPRESS originalSize={}", originalSize);
+        public static long[] bytesToLongArrayLz4(LZ4Compressor lz4Compressor, NativeBytes bytes, int padding)
+        {
+            int originalSize = (int)bytes.readRemaining(); 
+            //        log.debug("COMPRESS originalSize={}", originalSize);
 
-        //    ByteBuffer byteBuffer = ByteBuffer.allocate(originalSize);
+            //ByteBuffer byteBuffer = ByteBuffer.allocate(originalSize);
+            //Span<byte> byteBuffer = new Span<byte>(new byte[originalSize]);
+            {
+                var byteBuffer = bytes.read();
 
-        //    bytes.read(byteBuffer);
+                //byteBuffer.flip();
 
-        //    byteBuffer.flip();
+                Span<byte> byteBufferCompressed = new Span<byte>(new byte[4 + LZ4Codec.MaximumOutputLength(originalSize)]); // ByteBuffer.allocate(4 + lz4Compressor.maxCompressedLength(originalSize));
+                MemoryMarshal.Write<int>(byteBufferCompressed, ref originalSize); // override with compressed length
+                LZ4Codec.Encode(byteBuffer, byteBufferCompressed.Slice(4));
 
-        //    ByteBuffer byteBufferCompressed = ByteBuffer.allocate(4 + lz4Compressor.maxCompressedLength(originalSize));
-        //    byteBufferCompressed.putInt(originalSize);// override with compressed length
-        //    lz4Compressor.compress(byteBuffer, byteBufferCompressed);
+                //byteBufferCompressed.flip();
 
-        //    byteBufferCompressed.flip();
+                int compressedBytesLen = byteBufferCompressed.Length;
 
-        //    int compressedBytesLen = byteBufferCompressed.remaining();
-
-        //    return toLongsArray(
-        //            byteBufferCompressed.array(),
-        //            byteBufferCompressed.arrayOffset(),
-        //            compressedBytesLen,
-        //            padding);
-        //}
+                return toLongsArray(
+                        byteBufferCompressed.ToArray(),
+                        0,
+                        compressedBytesLen,
+                        padding);
+            }
+        }
 
         public static long[] toLongsArray(byte[] bytes, int padding)
         {
             int longLength = requiredLongArraySize(bytes.Length, padding);
-            long[] longArray = new long[longLength];
             //log.debug("byte[{}]={}", bytes.length, bytes);
-            using (var allocate = new MemoryStream(longLength * 8 * 2))
             {
-                throw new NotImplementedException();
                 //ByteBuffer allocate = ByteBuffer.allocate(longLength * 8 * 2);
+                var allocate = bytes.AsSpan<byte>();
                 //LongBuffer longBuffer = allocate.asLongBuffer();
+                var longBuffer = MemoryMarshal.Cast<byte, long>(allocate);
                 //allocate.Write(bytes);
                 //longBuffer.get(longArray);
+                long[] longArray = new long[longLength];
+                longBuffer.CopyTo(longArray.AsSpan());
                 //return longArray;
+                return longArray;
             }
         }
 
-        //public static long[] toLongsArray(byte[] bytes, int offset, int length, int padding)
-        //{
-
-        //    int longLength = requiredLongArraySize(length, padding);
-        //    long[] longArray = new long[longLength];
-        //    //log.debug("byte[{}]={}", bytes.length, bytes);
-        //    ByteBuffer allocate = ByteBuffer.allocate(longLength * 8 * 2);
-        //    LongBuffer longBuffer = allocate.asLongBuffer();
-        //    allocate.put(bytes, offset, length);
-        //    longBuffer.get(longArray);
-        //    return longArray;
-        //}
+        public static long[] toLongsArray(byte[] bytes, int offset, int length, int padding)
+        {
+            int longLength = requiredLongArraySize(length, padding);
+            //long[] longArray = new long[longLength];
+            //log.debug("byte[{}]={}", bytes.length, bytes);
+            //ByteBuffer allocate = ByteBuffer.allocate();
+            //var allocate = new Span<byte>(new byte[longLength * 8 * 2]);
+            var allocate = bytes.AsSpan<byte>(offset, length);
+            //LongBuffer longBuffer = allocate.asLongBuffer();
+            var longBuffer = MemoryMarshal.Cast<byte, long>(allocate);
+            //allocate.wr.put(bytes, offset, length);
+            //            longBuffer.get(longArray);
+            long[] longArray = new long[longLength];
+            longBuffer.CopyTo(longArray.AsSpan());
+            //return longBuffer.ToArray();
+            return longArray;
+        }
 
 
         public static int requiredLongArraySize(int bytesLength, int padding)
@@ -95,25 +106,27 @@ namespace Exchange.Core.Utils
         }
 
 
-        //public static Wire longsToWire(long[] dataArray)
-        //{
+        public static Wire longsToWire(long[] dataArray)
+        {
 
-        //    int sizeInBytes = dataArray.Length * 8;
-        //    ByteBuffer byteBuffer = ByteBuffer.allocate(sizeInBytes);
-        //    byteBuffer.asLongBuffer().put(dataArray);
+            int sizeInBytes = dataArray.Length * 8;
+            //ByteBuffer byteBuffer = ByteBuffer.allocate(sizeInBytes);
+            //byteBuffer.asLongBuffer().put(dataArray);
+            var byteBuffer = MemoryMarshal.Cast<long, byte>(dataArray.AsSpan());
 
-        //    byte[] bytesArray = new byte[sizeInBytes];
-        //    byteBuffer.get(bytesArray);
+            //byte[] bytesArray = new byte[sizeInBytes];
+            //byteBuffer.get(bytesArray);
+            var bytesArray = byteBuffer.ToArray();
 
-        //    //log.debug(" section {} -> {}", section, bytes);
+            //log.debug(" section {} -> {}", section, bytes);
 
-        //    Bytes<ByteBuffer> bytes = Bytes.elasticHeapByteBuffer(sizeInBytes);
-        //    bytes.ensureCapacity(sizeInBytes);
+            //Bytes<ByteBuffer> bytes = Bytes.elasticHeapByteBuffer(sizeInBytes);
+            //bytes.ensureCapacity(sizeInBytes);
 
-        //    bytes.write(bytesArray);
+            //bytes.write(bytesArray);
 
-        //    return WireType.RAW.apply(bytes);
-        //}
+            return Wire.Raw(bytesArray);
+        }
 
         public static Wire longsLz4ToWire(long[] dataArray, int longsTransfered)
         {
@@ -121,22 +134,27 @@ namespace Exchange.Core.Utils
             //        log.debug("long dataArray.len={} longsTransfered={}", dataArray.length, longsTransfered);
 
             //ByteBuffer byteBuffer = ByteBuffer.allocate(longsTransfered * 8);
-            using (var byteBuffer = new MemoryStream(longsTransfered * 8))
+
+            //using (var byteBuffer = new MemoryStream(longsTransfered * 8))
             {
-                throw new NotImplementedException();
                 //byteBuffer.asLongBuffer().put(dataArray, 0, longsTransfered);
+                var byteBuffer = MemoryMarshal.AsBytes(dataArray.AsSpan(0, longsTransfered));
 
                 //int originalSizeBytes = byteBuffer.getInt();
+                int originalSizeBytes = MemoryMarshal.Read<int>(byteBuffer);
+                byteBuffer = byteBuffer.Slice(sizeof(int));
 
                 //ByteBuffer uncompressedByteBuffer = ByteBuffer.allocate(originalSizeBytes);
+                Span<byte> uncompressedByteBuffer = new Span<byte>(new byte[originalSizeBytes]);
 
                 //LZ4FastDecompressor lz4FastDecompressor = LZ4Factory.fastestInstance().fastDecompressor();
 
                 //lz4FastDecompressor.decompress(byteBuffer, byteBuffer.position(), uncompressedByteBuffer, uncompressedByteBuffer.position(), originalSizeBytes);
-
+                var length = LZ4Codec.Decode(byteBuffer, uncompressedByteBuffer);
                 //Bytes<ByteBuffer> bytes = Bytes.wrapForRead(uncompressedByteBuffer);
 
                 //return WireType.RAW.apply(bytes);
+                return Wire.Raw(uncompressedByteBuffer.Slice(0, length).ToArray());
             }
         }
 
@@ -383,24 +401,24 @@ namespace Exchange.Core.Utils
         //    return list;
         //}
 
-        //public static <T> void marshallNullable(final T object, final BytesOut bytes, final BiConsumer<T, BytesOut> marshaller)
-        //{
-        //    bytes.writeBoolean(object != null);
-        //    if (object != null)
-        //    {
-        //        marshaller.accept(object, bytes);
-        //    }
-        //}
+        public static void marshallNullable<T>(T obj, IBytesOut bytes, Action<T, IBytesOut> marshaller)
+        {
+            bytes.writeBool(obj != null);
+            if (obj != null)
+            {
+                marshaller(obj, bytes);
+            }
+        }
 
         //public static <T> T preferNotNull(final T a, final T b)
         //{
         //    return a == null ? b : a;
         //}
 
-        //public static <T> T readNullable(final BytesIn bytesIn, final Function<BytesIn, T> creator)
-        //{
-        //    return bytesIn.readBoolean() ? creator.apply(bytesIn) : null;
-        //}
+        public static T readNullable<T>(IBytesIn bytesIn, Func<IBytesIn, T> creator)
+        {
+            return bytesIn.readBool() ? creator(bytesIn) : default;
+        }
 
         //public static <V> LongObjectHashMap<V> mergeOverride(final LongObjectHashMap<V> a, final LongObjectHashMap<V> b)
         //{
@@ -436,7 +454,7 @@ namespace Exchange.Core.Utils
                     else
                     {
                         foreach (var pair in map)
-                            res[pair.Key] += pair.Value;
+                            res.AddValue(pair.Key, pair.Value);
                     }
                 }
             }

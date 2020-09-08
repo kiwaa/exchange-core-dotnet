@@ -61,7 +61,7 @@ namespace Exchange.Core.Processors
          */
         public void Run()
         {
-            if (Interlocked.CompareExchange(ref running, IDLE, RUNNING) != RUNNING)
+            if (Interlocked.CompareExchange(ref running, RUNNING, IDLE) != RUNNING)
             {
                 sequenceBarrier.ClearAlert();
 

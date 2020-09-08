@@ -307,17 +307,19 @@ namespace Exchange.Core.Common.Api
         public int Currency { get; }
         public long Amount { get; }
         public long TransactionId { get; }
-        public ApiAdjustUserBalance(long uid, int currency, long amount, long transactionId)
+        public BalanceAdjustmentType AdjustmentType { get; }
+        public ApiAdjustUserBalance(long uid, int currency, long amount, long transactionId, BalanceAdjustmentType adjustmentType)
         {
             Uid = uid;
             Currency = currency;
             Amount = amount;
             TransactionId = transactionId;
+            AdjustmentType = adjustmentType;
         }
 
         public bool Equals(ApiAdjustUserBalance other)
         {
-              return Uid.Equals(other.Uid) && Currency.Equals(other.Currency) && Amount.Equals(other.Amount) && TransactionId.Equals(other.TransactionId);
+              return Uid.Equals(other.Uid) && Currency.Equals(other.Currency) && Amount.Equals(other.Amount) && TransactionId.Equals(other.TransactionId) && AdjustmentType.Equals(other.AdjustmentType);
         }
 
         public static ApiAdjustUserBalanceBuilder Builder()
@@ -331,6 +333,7 @@ namespace Exchange.Core.Common.Api
             private int _currency;
             private long _amount;
             private long _transactionId;
+            private BalanceAdjustmentType _adjustmentType;
 
             public ApiAdjustUserBalanceBuilder uid(long value)
             {
@@ -352,10 +355,15 @@ namespace Exchange.Core.Common.Api
                 _transactionId = value;
                 return this;
             }
+            public ApiAdjustUserBalanceBuilder adjustmentType(BalanceAdjustmentType value)
+            {
+                _adjustmentType = value;
+                return this;
+            }
 
             public ApiAdjustUserBalance build()
             {
-                return new ApiAdjustUserBalance(_uid, _currency, _amount, _transactionId);
+                return new ApiAdjustUserBalance(_uid, _currency, _amount, _transactionId, _adjustmentType);
             }
         }
     }

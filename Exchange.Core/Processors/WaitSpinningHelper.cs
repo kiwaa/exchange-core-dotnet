@@ -3,6 +3,7 @@ using Exchange.Core.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace Exchange.Core.Processors
         // blocking mode, using same locking objects that Disruptor operates with
         private readonly bool block;
         private readonly BlockingWaitStrategy blockingDisruptorWaitStrategy;
-        //private readonly Lock lock;
+        private readonly object _gate;
         //private readonly Condition processorNotifyCondition;
         // next Disruptor release will have mutex (to avoid allocations)
         // private final Object mutex;
@@ -30,15 +31,16 @@ namespace Exchange.Core.Processors
         {
             this.sequenceBarrier = sequenceBarrier;
             this.spinLimit = spinLimit;
-            //this.sequencer = extractSequencer(ringBuffer);
+            this.sequencer = extractSequencer(ringBuffer);
             this.yieldLimit = CoreWaitStrategyHelper.IsYield(waitStrategy) ? spinLimit / 2 : 0;
 
             this.block = CoreWaitStrategyHelper.IsBlock(waitStrategy);
             if (block)
             {
-                throw new NotImplementedException();
-                //this.blockingDisruptorWaitStrategy = ReflectionUtils.extractField(typeof(AbstractSequencer), (AbstractSequencer)sequencer, "waitStrategy");
-                ////this.lock = ReflectionUtils.extractField(BlockingWaitStrategy.class, blockingDisruptorWaitStrategy, "lock");
+                var field = typeof(MultiProducerSequencer).GetField("_waitStrategy", BindingFlags.NonPublic | BindingFlags.Instance);
+                this.blockingDisruptorWaitStrategy = (BlockingWaitStrategy)field.GetValue(sequencer);
+                var f2 = typeof(BlockingWaitStrategy).GetField("_gate", BindingFlags.NonPublic | BindingFlags.Instance);
+                _gate = f2.GetValue(blockingDisruptorWaitStrategy);
                 //this.processorNotifyCondition = ReflectionUtils.extractField(typeof(BlockingWaitStrategy), blockingDisruptorWaitStrategy, "processorNotifyCondition");
             }
             else
@@ -69,16 +71,15 @@ namespace Exchange.Core.Processors
                                         mutex.wait();
                                     }
                     */
-                    //lock (_lock)
-                    //{
-                    //    sequenceBarrier.CheckAlert();
-                    //    // lock only if sequence barrier did not progressed since last check
-                    //    if (availableSequence == sequenceBarrier.Cursor)
-                    //    {
-                    //        processorNotifyCondition.await();
-                    //    }
-                    //}
-                    throw new NotImplementedException();
+                    lock (_gate)
+                    {
+                        sequenceBarrier.CheckAlert();
+                        //    // lock only if sequence barrier did not progressed since last check
+                        if (availableSequence == sequenceBarrier.Cursor)
+                        {
+                            Monitor.Wait(_gate);
+                        }
+                    }
                 }
 
                 spin--;
@@ -97,18 +98,19 @@ namespace Exchange.Core.Processors
             }
         }
 
-        //private static ISequencer extractSequencer<T>(RingBuffer<T> ringBuffer) where T : class
-        //{
-        //    try
-        //    {
-        //        Field f = ReflectionUtils.getField(typeof(RingBuffer), "sequencer");
-        //        f.setAccessible(true);
-        //        return (ISequencer)f.get(ringBuffer);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new InvalidOperationException("Can not access Disruptor internals: ", e);
-        //    }
-        //}
+        private static ISequencer extractSequencer<T>(RingBuffer<T> ringBuffer) where T : class
+        {
+            try
+            {
+                FieldInfo f = typeof(RingBuffer<T>).GetField("_sequencerDispatcher", BindingFlags.NonPublic | BindingFlags.Instance);
+                //f.setAccessible(true);
+                var disp = (SequencerDispatcher)f.GetValue(ringBuffer);
+                return disp.Sequencer;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException("Can not access Disruptor internals: ", e);
+            }
+        }
     }
 }

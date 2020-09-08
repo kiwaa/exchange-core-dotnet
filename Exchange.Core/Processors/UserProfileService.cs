@@ -23,7 +23,7 @@ namespace Exchange.Core.Processors
         /*
          * State: uid to UserProfile
          */
-        private Dictionary<long, UserProfile> userProfiles { get; }
+        public Dictionary<long, UserProfile> userProfiles { get; }
 
         public UserProfileService()
         {
@@ -98,7 +98,7 @@ namespace Exchange.Core.Processors
             }
 
             userProfile.adjustmentsCounter = fundingTransactionId;
-            userProfile.accounts[currency] += amount;
+            userProfile.accounts.AddValue(currency, amount);
 
             //log.debug("FUND: {}", userProfile);
             return CommandResultCode.SUCCESS;

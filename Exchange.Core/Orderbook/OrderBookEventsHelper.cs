@@ -104,7 +104,7 @@ namespace Exchange.Core.Orderbook
 
         public MatcherTradeEvent createBinaryEventsChain(long timestamp,
                                                          int section,
-                                                         NativeBytes<byte> bytes)
+                                                         NativeBytes bytes)
         {
 
             long[] dataArray = SerializationUtils.bytesToLongArray(bytes, 5);
@@ -145,33 +145,44 @@ namespace Exchange.Core.Orderbook
         }
 
 
-        //public static NavigableMap<Integer, Wire> deserializeEvents(final OrderCommand cmd)
-        //{
+        public static SortedDictionary<int, Wire> deserializeEvents(OrderCommand cmd)
+        {
 
-        //    final Map<Integer, List< MatcherTradeEvent >> sections = new HashMap<>();
-        //    cmd.processMatcherEvents(evt->sections.computeIfAbsent(evt.section, k-> new ArrayList<>()).add(evt));
+            Dictionary<int, List<MatcherTradeEvent>> sections = new Dictionary<int, List<MatcherTradeEvent>>();
+            cmd.processMatcherEvents(evt =>
+            {
+                //sections.computeIfAbsent(evt.section, k => new ArrayList<>()).add(evt);
+                if (!sections.TryGetValue(evt.Section, out List<MatcherTradeEvent> value))
+                {
+                    value = new List<MatcherTradeEvent>();
+                    sections[evt.Section] = value;
+                }
+                value.Add(evt);
+            });
 
-        //    NavigableMap<Integer, Wire> result = new TreeMap<>();
+            SortedDictionary<int, Wire> result = new SortedDictionary<int, Wire>();
 
-        //    sections.forEach((section, events)-> {
-        //        final long[] dataArray = events.stream()
-        //                .flatMap(evt->Stream.of(
-        //                        evt.matchedOrderId,
-        //                        evt.matchedOrderUid,
-        //                        evt.price,
-        //                        evt.size,
-        //                        evt.bidderHoldPrice))
-        //                .mapToLong(s->s)
-        //                .toArray();
+            foreach (var pair in sections)
+            {
+                var section = pair.Key;
+                var events = pair.Value;
+                long[] dataArray = events.SelectMany(evt => new[]
+                {
+                    evt.MatchedOrderId,
+                                evt.MatchedOrderUid,
+                                evt.Price,
+                                evt.Size,
+                                evt.BidderHoldPrice
+                }).ToArray();
 
-        //        final Wire wire = SerializationUtils.longsToWire(dataArray);
+                Wire wire = SerializationUtils.longsToWire(dataArray);
 
-        //        result.put(section, wire);
-        //    });
+                result[section] = wire;
 
+            }
 
-        //    return result;
-        //}
+            return result;
+        }
 
         private MatcherTradeEvent newMatcherEvent()
         {

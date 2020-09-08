@@ -42,11 +42,9 @@ namespace Exchange.Core.Utils
                                                 MatcherTradeEvent eventHead)
         {
 
-            MatcherTradeEvent tail = eventHead.findTail();
-
             //MatcherTradeEvent.asList(eventHead).forEach(a -> log.info("in {}", a));
 
-            cmd.AppendEventsVolatile(eventHead, tail);
+            cmd.AppendEventsVolatile(eventHead);
         }
 
         internal static unsafe CommandResultCode CompareExchange(ref CommandResultCode target, CommandResultCode value, CommandResultCode expected)

@@ -10,6 +10,8 @@ namespace OpenHFT.Chronicle.WireMock
     {
         int readInt();
         long readLong();
-        object readByte();
+        byte readByte();
+
+        bool readBool();
     }
 }

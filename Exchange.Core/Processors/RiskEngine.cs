@@ -242,11 +242,11 @@ namespace Exchange.Core.Processors
                 switch (adjustmentType)
                 {
                     case BalanceAdjustmentType.ADJUSTMENT: // adjust total adjustments amount
-                        adjustments[currency] += -amountDiff;
+                        adjustments.AddValue(currency, -amountDiff);
                         break;
 
                     case BalanceAdjustmentType.SUSPEND: // adjust total suspends amount
-                        suspends[currency] += -amountDiff;
+                        suspends.AddValue(currency, -amountDiff);
                         break;
                 }
             }
@@ -531,7 +531,8 @@ namespace Exchange.Core.Processors
                 }
                 else
                 {
-                    freeMargin = position.estimateProfit(spec, lastPriceCache[spec.SymbolId]);
+                    lastPriceCache.TryGetValue(spec.SymbolId, out LastPriceCacheRecord value);
+                    freeMargin = position.estimateProfit(spec, value);
                 }
             }
 
@@ -641,7 +642,7 @@ namespace Exchange.Core.Processors
                     long sizeOpen = takerSpr.updatePositionForMarginTrade(takerAction, ev.Size, ev.Price);
                     long fee = spec.TakerFee * sizeOpen;
                     takerUp.accounts[spec.QuoteCurrency] += -fee;
-                    fees[spec.QuoteCurrency] += fee;
+                    fees.AddValue(spec.QuoteCurrency, fee);
                 }
                 else if (ev.EventType == MatcherEventType.REJECT || ev.EventType == MatcherEventType.REDUCE)
                 {
@@ -819,7 +820,7 @@ namespace Exchange.Core.Processors
 
             if (takerSizeForThisHandler != 0 || makerSizeForThisHandler != 0)
             {
-                fees[quoteCurrency] += spec.TakerFee * takerSizeForThisHandler + spec.MakerFee * makerSizeForThisHandler;
+                fees.AddValue(quoteCurrency, spec.TakerFee * takerSizeForThisHandler + spec.MakerFee * makerSizeForThisHandler);
             }
         }
 

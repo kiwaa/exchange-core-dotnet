@@ -187,7 +187,7 @@ namespace Exchange.Core
                     break;
 
                 case OrderCommandType.BALANCE_ADJUSTMENT:
-                    sendApiCommandResult(new ApiAdjustUserBalance(cmd.Uid, cmd.Symbol, cmd.Price, cmd.OrderId), cmd.ResultCode, cmd.Timestamp, seq);
+                    sendApiCommandResult(new ApiAdjustUserBalance(cmd.Uid, cmd.Symbol, cmd.Price, cmd.OrderId, BalanceAdjustmentType.ADJUSTMENT), cmd.ResultCode, cmd.Timestamp, seq);
                     break;
 
                 case OrderCommandType.BINARY_DATA_COMMAND:

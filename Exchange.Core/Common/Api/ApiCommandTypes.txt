@@ -34,10 +34,11 @@ ApiAdjustUserBalance :
     int currency
     long amount
     long transactionId
+    BalanceAdjustmentType adjustmentType
 
 ApiBinaryDataCommand :
     int transferId
-    BinaryDataCommand data
+    IBinaryDataCommand data
 
 ApiOrderBookRequest :
     int symbol

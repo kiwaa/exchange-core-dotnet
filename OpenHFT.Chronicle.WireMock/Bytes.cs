@@ -8,9 +8,9 @@ namespace OpenHFT.Chronicle.WireMock
 {
     public class Bytes
     {
-        public static NativeBytes<byte> allocateElasticDirect(int size)
+        public static NativeBytes allocateElasticDirect(int size)
         {
-            throw new NotImplementedException();
+            return new NativeBytes(size);
         }
     }
 }

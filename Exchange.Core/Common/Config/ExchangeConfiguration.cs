@@ -71,7 +71,7 @@ namespace Exchange.Core.Common.Config
 
             public ExchangeConfiguration build()
             {
-                throw new NotImplementedException();
+                return new ExchangeConfiguration(_ordersProcessingConfiguration, _performanceConfiguration, _initialStateConfiguration, _reportsQueriesConfiguration, _loggingConfiguration, _serializationConfiguration);
             }
 
             public ExchangeConfigurationBuilder ordersProcessingCfg(OrdersProcessingConfiguration value)

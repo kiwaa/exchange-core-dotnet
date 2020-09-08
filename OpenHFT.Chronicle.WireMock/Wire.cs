@@ -8,7 +8,14 @@ namespace OpenHFT.Chronicle.WireMock
 {
     public class Wire
     {
-        public IBytesIn Bytes { get; }
+        public IBytesIn Bytes { get; private set; }
 
+        public static Wire Raw(byte[] vs)
+        {
+            return new Wire()
+            {
+                Bytes = new NativeBytes(vs)
+            };
+        }
     }
 }
