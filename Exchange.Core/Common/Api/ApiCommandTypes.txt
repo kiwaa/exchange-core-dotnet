@@ -44,3 +44,5 @@ ApiOrderBookRequest :
     int symbol
     int size
 
+ApiNop :
+

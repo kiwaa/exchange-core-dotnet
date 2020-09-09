@@ -78,7 +78,7 @@ namespace Exchange.Core.Common
             SerializationUtils.marshallIntLongHashMap(accounts, bytes);
 
             // suspended
-            bytes.writeByte((byte)userStatus);
+            bytes.writeByte((sbyte)userStatus);
         }
 
 

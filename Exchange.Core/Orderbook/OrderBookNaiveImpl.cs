@@ -630,7 +630,7 @@ namespace Exchange.Core.Orderbook
 
         public void writeMarshallable(IBytesOut bytes)
         {
-            bytes.writeByte((byte)getImplementationType());
+            bytes.writeByte((sbyte)getImplementationType());
             symbolSpec.writeMarshallable(bytes);
             SerializationUtils.marshallLongMap(askBuckets, bytes);
             SerializationUtils.marshallLongMap(bidBuckets, bytes);

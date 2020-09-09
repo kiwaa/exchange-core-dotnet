@@ -30,7 +30,7 @@ namespace Exchange.Core.Common
             bytes.writeLong(Size);
             bytes.writeLong(Filled);
             bytes.writeLong(ReserveBidPrice);
-            bytes.writeByte((byte)Action);
+            bytes.writeByte((sbyte)Action);
             bytes.writeLong(Uid);
             bytes.writeLong(Timestamp);
             //        bytes.writeInt(userCookie);

@@ -55,7 +55,7 @@ namespace Exchange.Core.Common.Api.Reports
             bytes.writeBool(UserStatus != null);
             if (UserStatus != null)
             {
-                bytes.writeByte((byte)UserStatus);
+                bytes.writeByte((sbyte)UserStatus);
             }
 
             bytes.writeBool(Accounts != null);

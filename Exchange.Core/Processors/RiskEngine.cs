@@ -797,7 +797,7 @@ namespace Exchange.Core.Processors
                     long size = ev.Size;
                     UserProfile maker = userProfileService.getUserProfileOrAddSuspended(ev.MatchedOrderUid);
                     long gainedAmountInQuoteCurrency = CoreArithmeticUtils.calculateAmountBid(size, ev.Price, spec);
-                    maker.accounts[quoteCurrency] += gainedAmountInQuoteCurrency - spec.MakerFee * size;
+                    maker.accounts.AddValue(quoteCurrency, gainedAmountInQuoteCurrency - spec.MakerFee * size);
                     makerSizeForThisHandler += size;
                 }
 
@@ -814,8 +814,8 @@ namespace Exchange.Core.Processors
                 }
                 // TODO IOC_BUDGET - order can be partially rejected - need held taker fee correction
 
-                taker.accounts[quoteCurrency] += (takerSizePriceHeldSum - takerSizePriceSum) * spec.QuoteScaleK;
-                taker.accounts[spec.BaseCurrency] += takerSizeForThisHandler * spec.BaseScaleK;
+                taker.accounts.AddValue(quoteCurrency, (takerSizePriceHeldSum - takerSizePriceSum) * spec.QuoteScaleK);
+                taker.accounts.AddValue(spec.BaseCurrency, takerSizeForThisHandler * spec.BaseScaleK);
             }
 
             if (takerSizeForThisHandler != 0 || makerSizeForThisHandler != 0)

@@ -30,17 +30,19 @@ namespace Exchange.Core.Common.Api.Reports
             SerializationUtils.marshallNullable(OpenInterestShort, bytes, SerializationUtils.marshallIntLongHashMap);
         }
 
+        public Dictionary<int,long> getGlobalBalancesSum()
+        {
+            return SerializationUtils.mergeSum(AccountBalances, OrdersBalances, Fees, Adjustments, Suspends);
+        }
+        public Dictionary<int, long> getClientsBalancesSum()
+        {
+            return SerializationUtils.mergeSum(AccountBalances, OrdersBalances, Suspends);
+        }
 
         public bool isGlobalBalancesAllZero()
         {
             return getGlobalBalancesSum().All(amount => amount.Value == 0L);
         }
-
-        public Dictionary<int, long> getGlobalBalancesSum()
-        {
-            return SerializationUtils.mergeSum(AccountBalances, OrdersBalances, Fees, Adjustments, Suspends);
-        }
-
 
         public static TotalCurrencyBalanceReportResult createEmpty()
         {

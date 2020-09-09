@@ -35,7 +35,7 @@ namespace Exchange.Core.Common
         public void writeMarshallable(IBytesOut bytes)
         {
             bytes.writeInt(SymbolId);
-            bytes.writeByte((byte)Type);
+            bytes.writeByte((sbyte)Type);
             bytes.writeInt(BaseCurrency);
             bytes.writeInt(QuoteCurrency);
             bytes.writeLong(BaseScaleK);

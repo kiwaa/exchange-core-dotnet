@@ -68,7 +68,14 @@ namespace Exchange.Core.Common.Api
 					var propertyName = x.Key.First().ToString().ToUpper() + x.Key.Substring(1);
 					return propertyName + ".Equals(other." + propertyName + ")";
 				}));
-				WriteLine("  return " + equals + ";");
+				if (string.IsNullOrEmpty(equals))
+				{
+					WriteLine("  return true;");
+				}
+				else
+				{
+					WriteLine("  return " + equals + ";");
+				}
 				PopIndent();
 				WriteLine("}");
 				WriteLine("");

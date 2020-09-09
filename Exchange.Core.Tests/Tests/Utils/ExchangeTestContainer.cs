@@ -22,7 +22,7 @@ namespace Exchange.Core.Tests.Utils
         private static ILog log = LogManager.GetLogger(typeof(ExchangeTestContainer));
 
         private readonly ExchangeCore exchangeCore;
-        private ExchangeApi api { get; }
+        public ExchangeApi api { get; }
         //private readonly AffinityThreadFactory threadFactory { get; }
 
         private long uniqueIdCounterLong = 0;
@@ -162,12 +162,12 @@ namespace Exchange.Core.Tests.Utils
             api.submitCommandsSync(cmds);
         }
 
-        //public void addMoneyToUser(long uid, int currency, long amount)
-        //{
-        //    List<ApiCommand> cmds = new List<ApiCommand>();
-        //    cmds.Add(ApiAdjustUserBalance.Builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
-        //    api.submitCommandsSync(cmds);
-        //}
+        public void addMoneyToUser(long uid, int currency, long amount)
+        {
+            List<ApiCommand> cmds = new List<ApiCommand>();
+            cmds.Add(ApiAdjustUserBalance.Builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
+            api.submitCommandsSync(cmds);
+        }
 
 
         public void addSymbol(CoreSymbolSpecification symbol)
@@ -239,24 +239,24 @@ namespace Exchange.Core.Tests.Utils
         //    api.submitCommandAsync(ApiNop.builder().build()).Result;
         //}
 
-        //public void usersInit(int numUsers, HashSet<int> currencies)
-        //{
-        //    foreach (var uid in Enumerable.Range(1, numUsers))
-        //    {
-        //        api.submitCommand(ApiAddUser.Builder().uid(uid).build());
-        //        long transactionId = 1L;
-        //        foreach (int currency in currencies)
-        //        {
-        //            api.submitCommand(ApiAdjustUserBalance.Builder()
-        //                    .uid(uid)
-        //                    .transactionId(transactionId++)
-        //                    .amount(10_0000_0000L)
-        //                    .currency(currency).build());
-        //        }
-        //    }
+        public void usersInit(int numUsers, HashSet<int> currencies)
+        {
+            foreach (var uid in Enumerable.Range(1, numUsers))
+            {
+                api.submitCommand(ApiAddUser.Builder().uid(uid).build());
+                long transactionId = 1L;
+                foreach (int currency in currencies)
+                {
+                    api.submitCommand(ApiAdjustUserBalance.Builder()
+                            .uid(uid)
+                            .transactionId(transactionId++)
+                            .amount(10_0000_0000L)
+                            .currency(currency).build());
+                }
+            }
 
-        //    api.submitCommandAsync(ApiNop.builder().build()).Result;
-        //}
+            api.submitCommandAsync(ApiNop.Builder().build()).Wait();
+        }
 
         //public void resetExchangeCore()
         //{

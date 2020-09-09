@@ -70,12 +70,16 @@ namespace Exchange.Core
                 ringBuffer.PublishEvent(MoveOrderTranslator.Instance, (ApiMoveOrder)cmd);
             } else if (cmd is ApiPlaceOrder) {
                 ringBuffer.PublishEvent(NewOrderTranslator.Instance, (ApiPlaceOrder)cmd);
-            //} else if (cmd is ApiCancelOrder) {
-            //    ringBuffer.publishEvent(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder)cmd);
-            //} else if (cmd is ApiReduceOrder) {
-            //    ringBuffer.publishEvent(REDUCE_ORDER_TRANSLATOR, (ApiReduceOrder)cmd);
-            //} else if (cmd is ApiOrderBookRequest) {
-            //    ringBuffer.publishEvent(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest)cmd);
+            }
+            else if (cmd is ApiCancelOrder)
+            {
+                ringBuffer.PublishEvent(CancelOrderTranslator.Instance, (ApiCancelOrder)cmd);
+            }
+            else if (cmd is ApiReduceOrder)
+            {
+                ringBuffer.PublishEvent(ReduceOrderTranslator.Instance, (ApiReduceOrder)cmd);
+                //} else if (cmd is ApiOrderBookRequest) {
+                //    ringBuffer.publishEvent(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest)cmd);
             } else if (cmd is ApiAddUser) {
                 ringBuffer.PublishEvent(AddUserTranslator.Instance, (ApiAddUser)cmd);
             } else if (cmd is ApiAdjustUserBalance) {
@@ -86,13 +90,15 @@ namespace Exchange.Core
             //    ringBuffer.publishEvent(SUSPEND_USER_TRANSLATOR, (ApiSuspendUser)cmd);
             } else if (cmd is ApiBinaryDataCommand) {
                 publishBinaryData((ApiBinaryDataCommand)cmd, seq=> { });
-            //} else if (cmd is ApiPersistState) {
-            //    publishPersistCmd((ApiPersistState)cmd, (seq1, seq2)-> {
-            //    });
-            //} else if (cmd is ApiReset) {
-            //    ringBuffer.publishEvent(RESET_TRANSLATOR, (ApiReset)cmd);
-            //} else if (cmd is ApiNop) {
-            //    ringBuffer.publishEvent(NOP_TRANSLATOR, (ApiNop)cmd);
+                //} else if (cmd is ApiPersistState) {
+                //    publishPersistCmd((ApiPersistState)cmd, (seq1, seq2)-> {
+                //    });
+                //} else if (cmd is ApiReset) {
+                //    ringBuffer.publishEvent(RESET_TRANSLATOR, (ApiReset)cmd);
+            }
+            else if (cmd is ApiNop)
+            {
+                ringBuffer.PublishEvent(NopTranslator.Instance, (ApiNop)cmd);
             } else
             {
                 throw new InvalidOperationException("Unsupported command type: " + cmd.GetType().Name);
@@ -111,10 +117,10 @@ namespace Exchange.Core
             {
                 return submitCommandAsync(NewOrderTranslator.Instance, (ApiPlaceOrder)cmd);
             }
-            //else if (cmd is ApiCancelOrder)
-            //{
-            //    return submitCommandAsync(CANCEL_ORDER_TRANSLATOR, (ApiCancelOrder)cmd);
-            //}
+            else if (cmd is ApiCancelOrder)
+            {
+                return submitCommandAsync(CancelOrderTranslator.Instance, (ApiCancelOrder)cmd);
+            }
             //else if (cmd is ApiReduceOrder)
             //{
             //    return submitCommandAsync(REDUCE_ORDER_TRANSLATOR, (ApiReduceOrder)cmd);
@@ -151,10 +157,10 @@ namespace Exchange.Core
             //{
             //    return submitCommandAsync(RESET_TRANSLATOR, (ApiReset)cmd);
             //}
-            //else if (cmd is ApiNop)
-            //{
-            //    return submitCommandAsync(NOP_TRANSLATOR, (ApiNop)cmd);
-            //}
+            else if (cmd is ApiNop)
+            {
+                return submitCommandAsync(NopTranslator.Instance, (ApiNop)cmd);
+            }
             else
             {
                 throw new InvalidOperationException("Unsupported command type: " + cmd.GetType().Name);
@@ -503,6 +509,22 @@ namespace Exchange.Core
             }
         };
 
+        private class ReduceOrderTranslator : IEventTranslatorOneArg<OrderCommand, ApiReduceOrder>
+        {
+            public static readonly ReduceOrderTranslator Instance = new ReduceOrderTranslator();
+            public void TranslateTo(OrderCommand cmd, long seq, ApiReduceOrder api)
+            {
+                cmd.Command = OrderCommandType.REDUCE_ORDER;
+                cmd.OrderId = api.OrderId;
+                cmd.Symbol = api.Symbol;
+                cmd.Uid = api.Uid;
+                cmd.Size = api.ReduceSize;
+                cmd.Timestamp = api.Timestamp;
+                cmd.ResultCode = CommandResultCode.NEW;
+            }
+        };
+
+
         private class AddUserTranslator : IEventTranslatorOneArg<OrderCommand, ApiAddUser>
         {
             public static readonly AddUserTranslator Instance = new AddUserTranslator();
@@ -529,24 +551,23 @@ namespace Exchange.Core
                 cmd.OrderType = (OrderType)api.AdjustmentType;
                 cmd.Timestamp = api.Timestamp;
                 cmd.ResultCode = CommandResultCode.NEW;
+            }
+        };
 
+        private class NopTranslator : IEventTranslatorOneArg<OrderCommand, ApiNop>
+        {
+            public static readonly NopTranslator Instance = new NopTranslator();
+            public void TranslateTo(OrderCommand cmd, long seq, ApiNop api)
+            {
+                cmd.Command = OrderCommandType.NOP;
+                cmd.Timestamp = api.Timestamp;
+                cmd.ResultCode = CommandResultCode.NEW;
             }
         };
 
     }
 
 
-
-
-    //private static final EventTranslatorOneArg<OrderCommand, ApiReduceOrder> REDUCE_ORDER_TRANSLATOR = (cmd, seq, api)-> {
-    //    cmd.command = OrderCommandType.REDUCE_ORDER;
-    //    cmd.orderId = api.orderId;
-    //    cmd.symbol = api.symbol;
-    //    cmd.uid = api.uid;
-    //    cmd.size = api.reduceSize;
-    //    cmd.timestamp = api.timestamp;
-    //    cmd.resultCode = CommandResultCode.NEW;
-    //};
 
     //private static final EventTranslatorOneArg<OrderCommand, ApiOrderBookRequest> ORDER_BOOK_REQUEST_TRANSLATOR = (cmd, seq, api)-> {
     //    cmd.command = OrderCommandType.ORDER_BOOK_REQUEST;
@@ -577,11 +598,6 @@ namespace Exchange.Core
     //    cmd.resultCode = CommandResultCode.NEW;
     //};
 
-    //private static final EventTranslatorOneArg<OrderCommand, ApiNop> NOP_TRANSLATOR = (cmd, seq, api)-> {
-    //    cmd.command = OrderCommandType.NOP;
-    //    cmd.timestamp = api.timestamp;
-    //    cmd.resultCode = CommandResultCode.NEW;
-    //};
 
     // Mock
     public class LZ4Compressor

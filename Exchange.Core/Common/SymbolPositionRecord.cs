@@ -258,7 +258,7 @@ namespace Exchange.Core.Common
         {
             bytes.writeInt(symbol);
             bytes.writeInt(currency);
-            bytes.writeByte((byte)direction);
+            bytes.writeByte((sbyte)direction);
             bytes.writeLong(openVolume);
             bytes.writeLong(openPriceSum);
             bytes.writeLong(profit);

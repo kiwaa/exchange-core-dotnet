@@ -42,7 +42,7 @@ namespace Exchange.Core.Orderbook
             bytes.writeLong(Size);
             bytes.writeLong(Filled);
             bytes.writeLong(ReserveBidPrice);
-            bytes.writeByte((byte)Action);
+            bytes.writeByte((sbyte)Action);
             bytes.writeLong(Uid);
             bytes.writeLong(Timestamp);
             // bytes.writeInt(userCookie);

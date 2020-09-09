@@ -881,7 +881,7 @@ namespace Exchange.Core.Orderbook
 
         public void writeMarshallable(IBytesOut bytes)
         {
-            bytes.writeByte((byte)getImplementationType());
+            bytes.writeByte((sbyte)getImplementationType());
             symbolSpec.writeMarshallable(bytes);
             bytes.writeInt(orderIdIndex.size(int.MaxValue));
             foreach (var order in askOrdersStream(true))

@@ -39,9 +39,9 @@ namespace OpenHFT.Chronicle.WireMock
             return this;
         }
 
-        public IBytesOut writeByte(byte direction)
+        public IBytesOut writeByte(sbyte direction)
         {
-            _buffer[_position] = direction;
+            _buffer[_position] = (byte)direction;
             _position += 1;
             return this;
         }
@@ -73,9 +73,9 @@ namespace OpenHFT.Chronicle.WireMock
             return tmp;
         }
 
-        public byte readByte()
+        public sbyte readByte()
         {
-            var tmp = _buffer[_position];
+            var tmp = (sbyte)_buffer[_position];
             _position ++;
             return tmp;
         }

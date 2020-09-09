@@ -10,7 +10,7 @@ namespace OpenHFT.Chronicle.WireMock
     {
         IBytesOut writeLong(long askPrice);
         IBytesOut writeInt(int p);
-        IBytesOut writeByte(byte direction);
+        IBytesOut writeByte(sbyte direction);
         IBytesOut writeBool(bool v);
     }
 }

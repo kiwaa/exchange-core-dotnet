@@ -48,7 +48,7 @@ namespace Exchange.Core.Common.Api.Reports
         public void writeMarshallable(IBytesOut bytes)
         {
             bytes.writeInt(quoteCurrency);
-            bytes.writeByte((byte)direction);
+            bytes.writeByte((sbyte)direction);
             bytes.writeLong(openVolume);
             bytes.writeLong(openPriceSum);
             bytes.writeLong(profit);

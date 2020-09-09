@@ -451,6 +451,32 @@ namespace Exchange.Core.Common.Api
             }
         }
     }
+    public sealed partial class ApiNop : ApiCommand, IEquatable<ApiNop>
+    {
+        public ApiNop()
+        {
+        }
+
+        public bool Equals(ApiNop other)
+        {
+              return true;
+        }
+
+        public static ApiNopBuilder Builder()
+        {
+              return new ApiNopBuilder();
+        }
+
+        public sealed class ApiNopBuilder
+        {
+
+
+            public ApiNop build()
+            {
+                return new ApiNop();
+            }
+        }
+    }
 }
 
 
