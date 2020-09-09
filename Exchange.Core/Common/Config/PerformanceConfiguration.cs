@@ -20,8 +20,25 @@ namespace Exchange.Core.Common.Config
                     //                    .taskScheduler(new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE))
                     .taskScheduler(TaskScheduler.Default)
                     .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
-                    .binaryCommandsLz4CompressorFactory(()=> new LZ4Compressor())
+                    .binaryCommandsLz4CompressorFactory(() => new LZ4Compressor())
                     .orderBookFactory((spec, pool, helper, loggingCfg) => new OrderBookDirectImpl(spec, pool, helper, loggingCfg));
+        }
+
+        public static PerformanceConfiguration.PerformanceConfigurationBuilder throughputPerformanceBuilder()
+        {
+
+            return Builder()
+                    .ringBufferSize(64 * 1024)
+                    .matchingEnginesNum(4)
+                    .riskEnginesNum(2)
+                    .msgsInGroupLimit(4_096)
+                    .maxGroupDurationNs(4_000_000)
+                    //                    .threadFactory(new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE))
+                    .taskScheduler(TaskScheduler.Default)
+                    .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
+                    .binaryCommandsLz4CompressorFactory(() => new LZ4Compressor())
+                   //                    .binaryCommandsLz4CompressorFactory(()->LZ4Factory.fastestInstance().highCompressor())
+                   .orderBookFactory((spec, pool, helper, loggingCfg) => new OrderBookDirectImpl(spec, pool, helper, loggingCfg));
         }
         public override string ToString()
         {

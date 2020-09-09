@@ -10,6 +10,7 @@ using log4net;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -24,6 +25,7 @@ namespace Exchange.Core.Tests.Utils
         private readonly ExchangeCore exchangeCore;
         public ExchangeApi api { get; }
         //private readonly AffinityThreadFactory threadFactory { get; }
+        private TaskScheduler taskScheduler { get; }
 
         private long uniqueIdCounterLong = 0;
         private volatile int uniqueIdCounterInt = 0;
@@ -44,39 +46,39 @@ namespace Exchange.Core.Tests.Utils
                     SerializationConfiguration.DEFAULT);
         }
 
-        //public static ExchangeTestContainer create(PerformanceConfiguration perfCfg,
-        //                                           InitialStateConfiguration initStateCfg,
-        //                                           SerializationConfiguration serializationCfg)
-        //{
-        //    return new ExchangeTestContainer(perfCfg, initStateCfg, serializationCfg);
-        //}
+        public static ExchangeTestContainer create(PerformanceConfiguration perfCfg,
+                                                   InitialStateConfiguration initStateCfg,
+                                                   SerializationConfiguration serializationCfg)
+        {
+            return new ExchangeTestContainer(perfCfg, initStateCfg, serializationCfg);
+        }
 
-        //public static TestDataFutures prepareTestDataAsync(TestDataParameters parameters, int seed)
-        //{
-        //    var cssr = generateRandomSymbols(parameters.NumSymbols, parameters.CurrenciesAllowed, parameters.AllowedSymbolTypes);
-        //    Task<List<CoreSymbolSpecification>> coreSymbolSpecificationsFuture = Task.FromResult(cssr);
+        public static TestDataFutures prepareTestDataAsync(TestDataParameters parameters, int seed)
+        {
+            var cssr = generateRandomSymbols(parameters.NumSymbols, parameters.CurrenciesAllowed, parameters.AllowedSymbolTypes);
+            Task<List<CoreSymbolSpecification>> coreSymbolSpecificationsFuture = Task.FromResult(cssr);
 
-        //    var uar = UserCurrencyAccountsGenerator.generateUsers(parameters.NumAccounts, parameters.CurrenciesAllowed);
-        //    Task<List<BitSet>> usersAccountsFuture = Task.FromResult(uar);
+            var uar = UserCurrencyAccountsGenerator.generateUsers(parameters.NumAccounts, parameters.CurrenciesAllowed);
+            Task<List<BitSet>> usersAccountsFuture = Task.FromResult(uar);
 
-        //    var grr = TestOrdersGenerator.generateMultipleSymbols(
-        //                    TestOrdersGeneratorConfig.Builder()
-        //                            .coreSymbolSpecifications(cssr)
-        //                            .totalTransactionsNumber(parameters.TotalTransactionsNumber)
-        //                            .usersAccounts(uar)
-        //                            .targetOrderBookOrdersTotal(parameters.TargetOrderBookOrdersTotal)
-        //                            .seed(seed)
-        //                            .preFillMode(parameters.PreFillMode)
-        //                            .avalancheIOC(parameters.AvalancheIOC)
-        //                            .build());
-        //    Task<MultiSymbolGenResult> genResultFuture = Task.FromResult(grr);
+            var grr = TestOrdersGenerator.generateMultipleSymbols(
+                            TestOrdersGeneratorConfig.Builder()
+                                    .coreSymbolSpecifications(cssr)
+                                    .totalTransactionsNumber(parameters.TotalTransactionsNumber)
+                                    .usersAccounts(uar)
+                                    .targetOrderBookOrdersTotal(parameters.TargetOrderBookOrdersTotal)
+                                    .seed(seed)
+                                    .preFillMode(parameters.PreFillMode)
+                                    .avalancheIOC(parameters.AvalancheIOC)
+                                    .build());
+            Task<MultiSymbolGenResult> genResultFuture = Task.FromResult(grr);
 
-        //    return TestDataFutures.Builder()
-        //            .coreSymbolSpecifications(coreSymbolSpecificationsFuture)
-        //            .usersAccounts(usersAccountsFuture)
-        //            .genResult(genResultFuture)
-        //            .build();
-        //}
+            return TestDataFutures.Builder()
+                    .coreSymbolSpecifications(coreSymbolSpecificationsFuture)
+                    .usersAccounts(usersAccountsFuture)
+                    .genResult(genResultFuture)
+                    .build();
+        }
 
         private ExchangeTestContainer(PerformanceConfiguration perfCfg,
                                       InitialStateConfiguration initStateCfg,
@@ -86,6 +88,7 @@ namespace Exchange.Core.Tests.Utils
             //log.debug("CREATING exchange container");
 
             //this.threadFactory = new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_PHYSICAL_CORE);
+            taskScheduler = TaskScheduler.Default;
 
             ExchangeConfiguration exchangeConfiguration = ExchangeConfiguration.defaultBuilder()
                     .initStateCfg(initStateCfg)
@@ -175,11 +178,18 @@ namespace Exchange.Core.Tests.Utils
             sendBinaryDataCommandSync(new BatchAddSymbolsCommand(symbol), 5000);
         }
 
-        //public void addSymbols(List<CoreSymbolSpecification> symbols)
-        //{
-        //    // split by chunks
-        //    Lists.partition(symbols, 10000).forEach(partition => sendBinaryDataCommandSync(new BatchAddSymbolsCommand(partition), 5000));
-        //}
+        public void addSymbols(List<CoreSymbolSpecification> symbols)
+        {
+            // split by chunks
+            //Lists.partition(symbols, 10000).forEach(partition => sendBinaryDataCommandSync(new BatchAddSymbolsCommand(partition), 5000));
+            var partitions = symbols.Select((x, i) => new { Group = i / 10000, Value = x })
+                     .GroupBy(item => item.Group, g => g.Value)
+                     .Select(g => g.Where(x => true));
+            foreach (var part in partitions)
+            {
+                sendBinaryDataCommandSync(new BatchAddSymbolsCommand(part), 5000);
+            }
+        }
 
         public void sendBinaryDataCommandSync(IBinaryDataCommand data, int timeOutMs)
         {
@@ -206,38 +216,47 @@ namespace Exchange.Core.Tests.Utils
             return Interlocked.Increment(ref uniqueIdCounterLong);
         }
 
-        //public void userAccountsInit(List<BitSet> userCurrencies)
-        //{
+        public void userAccountsInit(List<BitSet> userCurrencies)
+        {
 
-        //    // calculate max amount can transfer to each account so that it is not possible to get long overflow
-        //    IntLongHashMap accountsNumPerCurrency = new IntLongHashMap();
-        //    userCurrencies.forEach(accounts->accounts.stream().forEach(currency => accountsNumPerCurrency.addToValue(currency, 1)));
-        //    IntLongHashMap amountPerAccount = new IntLongHashMap();
-        //    accountsNumPerCurrency.forEachKeyValue((currency, numAcc) => amountPerAccount.put(currency, long.MaxValue / (numAcc + 1)));
-        //    // amountPerAccount.forEachKeyValue((k, v) -> log.debug("{}={}", k, v));
+            // calculate max amount can transfer to each account so that it is not possible to get long overflow
+            Dictionary<int,long> accountsNumPerCurrency = new Dictionary<int, long>();
+            //userCurrencies.forEach(accounts->accounts.stream().forEach(currency => accountsNumPerCurrency.addToValue(currency, 1)));
+            foreach (var accounts in userCurrencies)
+                foreach (var currency in accounts.GetBits())
+                    accountsNumPerCurrency.AddValue((int)currency, 1);
+            Dictionary<int, long> amountPerAccount = new Dictionary<int, long>();
+            //accountsNumPerCurrency.forEachKeyValue((currency, numAcc) => amountPerAccount.put(currency, long.MaxValue / (numAcc + 1)));
+            foreach (var (currency, numAcc) in accountsNumPerCurrency)
+            {
+                amountPerAccount[currency] = long.MaxValue / (numAcc + 1);
+            }
+            // amountPerAccount.forEachKeyValue((k, v) -> log.debug("{}={}", k, v));
 
-        //    createUserAccountsRegular(userCurrencies, amountPerAccount);
-        //}
+            createUserAccountsRegular(userCurrencies, amountPerAccount);
+        }
 
 
-        //private void createUserAccountsRegular(List<BitSet> userCurrencies, IntLongHashMap amountPerAccount)
-        //{
-        //    int numUsers = userCurrencies.size() - 1;
+        private void createUserAccountsRegular(List<BitSet> userCurrencies, Dictionary<int, long> amountPerAccount)
+        {
+            int numUsers = userCurrencies.Count - 1;
 
-        //    foreach (var uid in Enumerable.Range(1, numUsers))
-        //    {
-        //        api.submitCommand(ApiAddUser.Builder().uid(uid).build());
-        //        userCurrencies.get(uid).stream().forEach(currency =>
-        //                api.submitCommand(ApiAdjustUserBalance.builder()
-        //                        .uid(uid)
-        //                        .transactionId(getRandomTransactionId())
-        //                        .amount(amountPerAccount.get(currency))
-        //                        .currency(currency)
-        //                        .build()));
-        //    }
+            foreach (var uid in Enumerable.Range(1, numUsers))
+            {
+                api.submitCommand(ApiAddUser.Builder().uid(uid).build());
+                foreach (var currency in userCurrencies[uid].GetBits())
+                {
+                    api.submitCommand(ApiAdjustUserBalance.Builder()
+                            .uid(uid)
+                            .transactionId(getRandomTransactionId())
+                            .amount(amountPerAccount[(int)currency])
+                            .currency((int)currency)
+                            .build());
+                }
+            }
 
-        //    api.submitCommandAsync(ApiNop.builder().build()).Result;
-        //}
+            api.submitCommandAsync(ApiNop.Builder().build()).Wait();
+        }
 
         public void usersInit(int numUsers, HashSet<int> currencies)
         {
@@ -258,11 +277,11 @@ namespace Exchange.Core.Tests.Utils
             api.submitCommandAsync(ApiNop.Builder().build()).Wait();
         }
 
-        //public void resetExchangeCore()
-        //{
-        //    CommandResultCode res = api.submitCommandAsync(ApiReset.builder().build()).Result;
-        //    Assert.AreEqual(res, CommandResultCode.SUCCESS);
-        //}
+        public void resetExchangeCore()
+        {
+            CommandResultCode res = api.submitCommandAsync(ApiReset.Builder().build()).Result;
+            Assert.AreEqual(res, CommandResultCode.SUCCESS);
+        }
 
         public void submitCommandSync(ApiCommand apiCommand, CommandResultCode expectedResultCode)
         {
@@ -314,60 +333,60 @@ namespace Exchange.Core.Tests.Utils
         //    return api.processReport(new StateHashReportQuery(), getRandomTransferId()).get().getStateHash();
         //}
 
-        //public static List<CoreSymbolSpecification> generateRandomSymbols(int num,
-        //                                                                  IEnumerable<int> currenciesAllowed,
-        //                                                                  AllowedSymbolTypes allowedSymbolTypes)
-        //{
-        //    Random random = new Random(1);
+        public static List<CoreSymbolSpecification> generateRandomSymbols(int num,
+                                                                          IEnumerable<int> currenciesAllowed,
+                                                                          AllowedSymbolTypes allowedSymbolTypes)
+        {
+            Random random = new Random(1);
 
-        //    Func<SymbolType> symbolTypeSupplier;
+            Func<SymbolType> symbolTypeSupplier;
 
-        //    switch (allowedSymbolTypes)
-        //    {
-        //        case AllowedSymbolTypes.FUTURES_CONTRACT:
-        //            symbolTypeSupplier = () => SymbolType.FUTURES_CONTRACT;
-        //            break;
+            switch (allowedSymbolTypes)
+            {
+                case AllowedSymbolTypes.FUTURES_CONTRACT:
+                    symbolTypeSupplier = () => SymbolType.FUTURES_CONTRACT;
+                    break;
 
-        //        case AllowedSymbolTypes.CURRENCY_EXCHANGE_PAIR:
-        //            symbolTypeSupplier = () => SymbolType.CURRENCY_EXCHANGE_PAIR;
-        //            break;
+                case AllowedSymbolTypes.CURRENCY_EXCHANGE_PAIR:
+                    symbolTypeSupplier = () => SymbolType.CURRENCY_EXCHANGE_PAIR;
+                    break;
 
-        //        case AllowedSymbolTypes.BOTH:
-        //        default:
-        //            symbolTypeSupplier = () => random.nextBoolean() ? SymbolType.FUTURES_CONTRACT : SymbolType.CURRENCY_EXCHANGE_PAIR;
-        //            break;
-        //    }
+                case AllowedSymbolTypes.BOTH:
+                default:
+                    symbolTypeSupplier = () => random.Next(2) == 1 ? SymbolType.FUTURES_CONTRACT : SymbolType.CURRENCY_EXCHANGE_PAIR;
+                    break;
+            }
 
-        //    List<int> currencies = new List<int>(currenciesAllowed);
-        //    List<CoreSymbolSpecification> result = new List<CoreSymbolSpecification>();
-        //    for (int i = 0; i < num;)
-        //    {
-        //        int baseCurrency = currencies[random.Next(currencies.Count)];
-        //        int quoteCurrency = currencies.[random.Next(currencies.Count)];
-        //        if (baseCurrency != quoteCurrency)
-        //        {
-        //            SymbolType type = symbolTypeSupplier();
-        //            long makerFee = random.Next(1000);
-        //            long takerFee = makerFee + random.Next(500);
-        //            CoreSymbolSpecification symbol = CoreSymbolSpecification.Builder()
-        //                    .symbolId(TestConstants.SYMBOL_AUTOGENERATED_RANGE_START + i)
-        //                    .type(type)
-        //                    .baseCurrency(baseCurrency) // TODO for futures can be any value
-        //                    .quoteCurrency(quoteCurrency)
-        //                    .baseScaleK(100)
-        //                    .quoteScaleK(10)
-        //                    .takerFee(takerFee)
-        //                    .makerFee(makerFee)
-        //                    .build();
+            List<int> currencies = new List<int>(currenciesAllowed);
+            List<CoreSymbolSpecification> result = new List<CoreSymbolSpecification>();
+            for (int i = 0; i < num;)
+            {
+                int baseCurrency = currencies[random.Next(currencies.Count)];
+                int quoteCurrency = currencies[random.Next(currencies.Count)];
+                if (baseCurrency != quoteCurrency)
+                {
+                    SymbolType type = symbolTypeSupplier();
+                    long makerFee = random.Next(1000);
+                    long takerFee = makerFee + random.Next(500);
+                    CoreSymbolSpecification symbol = CoreSymbolSpecification.Builder()
+                            .symbolId(TestConstants.SYMBOL_AUTOGENERATED_RANGE_START + i)
+                            .type(type)
+                            .baseCurrency(baseCurrency) // TODO for futures can be any value
+                            .quoteCurrency(quoteCurrency)
+                            .baseScaleK(100)
+                            .quoteScaleK(10)
+                            .takerFee(takerFee)
+                            .makerFee(makerFee)
+                            .build();
 
-        //            result.Add(symbol);
+                    result.Add(symbol);
 
-        //            //log.debug("{}", symbol);
-        //            i++;
-        //        }
-        //    }
-        //    return result;
-        //}
+                    //log.debug("{}", symbol);
+                    i++;
+                }
+            }
+            return result;
+        }
 
         //public void loadSymbolsUsersAndPrefillOrders(TestDataFutures testDataFutures)
         //{
@@ -398,42 +417,46 @@ namespace Exchange.Core.Tests.Utils
         //    Assert.AreEqual(totalBalanceReport().isGlobalBalancesAllZero(), true);
         //}
 
-        //public void loadSymbolsUsersAndPrefillOrdersNoLog(TestDataFutures testDataFutures)
-        //{
+        public void loadSymbolsUsersAndPrefillOrdersNoLog(TestDataFutures testDataFutures)
+        {
 
-        //    // load symbols
-        //    addSymbols(testDataFutures.CoreSymbolSpecifications.Result);
+            // load symbols
+            addSymbols(testDataFutures.CoreSymbolSpecifications.Result);
 
-        //    // create accounts and deposit initial funds
-        //    userAccountsInit(testDataFutures.UsersAccounts.Result);
+            // create accounts and deposit initial funds
+            userAccountsInit(testDataFutures.UsersAccounts.Result);
 
-        //    getApi().submitCommandsSync(testDataFutures.GenResult.Result.getApiCommandsFill().Result);
-        //}
+            api.submitCommandsSync(testDataFutures.GenResult.Result.ApiCommandsFill.Result);
+        }
 
 
-        ///**
-        // * Run test using threads factory.
-        // * This is needed for correct cpu pinning.
-        // *
-        // * @param test - test lambda
-        // * @param <V>  return parameter type
-        // * @return result from test lambda
-        // */
-        //public V executeTestingThread<V>(Callable<V> test)
-        //{
-        //    try
-        //    {
-        //        ExecutorService executor = Executors.newSingleThreadExecutor(threadFactory);
-        //        V result = executor.submit(test).get();
-        //        executor.shutdown();
-        //        executor.awaitTermination(3000, TimeUnit.SECONDS);
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new RuntimeException(ex);
-        //    }
-        //}
+        /**
+         * Run test using threads factory.
+         * This is needed for correct cpu pinning.
+         *
+         * @param test - test lambda
+         * @param <V>  return parameter type
+         * @return result from test lambda
+         */
+        public V executeTestingThread<V>(Func<V> test)
+        {
+            try
+            {
+                //ExecutorService executor = Executors.newSingleThreadExecutor(threadFactory);
+                var cts = new CancellationTokenSource();
+                var task = Task.Factory.StartNew<V>(test, cts.Token, TaskCreationOptions.None, taskScheduler);
+                //V result = executor.submit(test).get();
+                V result = task.Result;
+                //executor.shutdown();
+                //executor.awaitTermination(3000, TimeUnit.SECONDS);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                //throw new RuntimeException(ex);
+                throw;
+            }
+        }
 
         //public float executeTestingThreadPerfMtps(Callable<int> test)
         //{
@@ -446,13 +469,16 @@ namespace Exchange.Core.Tests.Utils
         //    });
         //}
 
-        //public float benchmarkMtps(List<ApiCommand> apiCommandsBenchmark)
-        //{
-        //    long tStart = System.currentTimeMillis();
-        //    getApi().submitCommandsSync(apiCommandsBenchmark);
-        //    long tDuration = System.currentTimeMillis() - tStart;
-        //    return apiCommandsBenchmark.size() / (float)tDuration / 1000.0f;
-        //}
+        public float benchmarkMtps(List<ApiCommand> apiCommandsBenchmark)
+        {
+            //long tStart = System.currentTimeMillis();
+            var sw = Stopwatch.StartNew();
+            api.submitCommandsSync(apiCommandsBenchmark);
+            sw.Stop();
+            //long tDuration = System.currentTimeMillis() - tStart;
+            long tDuration = sw.ElapsedMilliseconds;
+            return apiCommandsBenchmark.Count / (float)tDuration / 1000.0f;
+        }
 
         public void Dispose()
         {

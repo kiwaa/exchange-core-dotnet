@@ -16,5 +16,13 @@ namespace Exchange.Core.Utils
             }
             return dict[key] = old + value;
         }
+        public static int AddValue(this Dictionary<int, int> dict, int key, int value)
+        {
+            if (!dict.TryGetValue(key, out int old))
+            {
+                // nop
+            }
+            return dict[key] = old + value;
+        }
     }
 }

@@ -121,10 +121,10 @@ namespace Exchange.Core
             {
                 return submitCommandAsync(CancelOrderTranslator.Instance, (ApiCancelOrder)cmd);
             }
-            //else if (cmd is ApiReduceOrder)
-            //{
-            //    return submitCommandAsync(REDUCE_ORDER_TRANSLATOR, (ApiReduceOrder)cmd);
-            //}
+            else if (cmd is ApiReduceOrder)
+            {
+                return submitCommandAsync(ReduceOrderTranslator.Instance, (ApiReduceOrder)cmd);
+            }
             //else if (cmd is ApiOrderBookRequest)
             //{
             //    return submitCommandAsync(ORDER_BOOK_REQUEST_TRANSLATOR, (ApiOrderBookRequest)cmd);

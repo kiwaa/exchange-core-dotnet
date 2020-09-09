@@ -739,7 +739,7 @@ namespace Exchange.Core.Tests.Utils
 
         private static int AddToValue(Dictionary<int, int> dict, int key, int value)
         {
-            return dict[key] += value;
+            return dict.AddValue(key, value);
         }
     }
 }

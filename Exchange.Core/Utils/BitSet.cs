@@ -700,5 +700,7 @@ namespace Exchange.Core.Utils
 
             return true;
         }
+
+        public long[] GetBits() => bits;
     }
 }

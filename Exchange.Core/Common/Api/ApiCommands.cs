@@ -451,6 +451,32 @@ namespace Exchange.Core.Common.Api
             }
         }
     }
+    public sealed partial class ApiReset : ApiCommand, IEquatable<ApiReset>
+    {
+        public ApiReset()
+        {
+        }
+
+        public bool Equals(ApiReset other)
+        {
+              return true;
+        }
+
+        public static ApiResetBuilder Builder()
+        {
+              return new ApiResetBuilder();
+        }
+
+        public sealed class ApiResetBuilder
+        {
+
+
+            public ApiReset build()
+            {
+                return new ApiReset();
+            }
+        }
+    }
     public sealed partial class ApiNop : ApiCommand, IEquatable<ApiNop>
     {
         public ApiNop()

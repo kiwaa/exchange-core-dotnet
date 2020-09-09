@@ -409,8 +409,9 @@ namespace Exchange.Core.Processors
                         int recSymbol = position.symbol;
                         CoreSymbolSpecification spec2 = symbolSpecificationProvider.getSymbolSpecification(recSymbol);
                         // add P&L subtract margin
+                        lastPriceCache.TryGetValue(recSymbol, out LastPriceCacheRecord lastPrice);
                         freeFuturesMargin +=
-                                (position.estimateProfit(spec2, lastPriceCache[recSymbol]) - position.calculateRequiredMarginForFutures(spec2));
+                                (position.estimateProfit(spec2, lastPrice) - position.calculateRequiredMarginForFutures(spec2));
                     }
                 }
             }
@@ -466,7 +467,7 @@ namespace Exchange.Core.Processors
             }
 
             // speculative change balance
-            long newBalance = userProfile.accounts[currency] += -orderHoldAmount;
+            long newBalance = userProfile.accounts.AddValue(currency, -orderHoldAmount);
 
             bool canPlace = newBalance + freeFuturesMargin >= 0;
 
@@ -641,7 +642,7 @@ namespace Exchange.Core.Processors
                     // update taker's position
                     long sizeOpen = takerSpr.updatePositionForMarginTrade(takerAction, ev.Size, ev.Price);
                     long fee = spec.TakerFee * sizeOpen;
-                    takerUp.accounts[spec.QuoteCurrency] += -fee;
+                    takerUp.accounts.AddValue(spec.QuoteCurrency, -fee);
                     fees.AddValue(spec.QuoteCurrency, fee);
                 }
                 else if (ev.EventType == MatcherEventType.REJECT || ev.EventType == MatcherEventType.REDUCE)
@@ -663,8 +664,8 @@ namespace Exchange.Core.Processors
                 SymbolPositionRecord makerSpr = maker.getPositionRecordOrThrowEx(spec.SymbolId);
                 long sizeOpen = makerSpr.updatePositionForMarginTrade(OrderActionHelper.opposite(takerAction), ev.Size, ev.Price);
                 long fee = spec.MakerFee * sizeOpen;
-                maker.accounts[spec.QuoteCurrency] += -fee;
-                fees[spec.QuoteCurrency] += fee;
+                maker.accounts.AddValue(spec.QuoteCurrency, -fee);
+                fees.AddValue(spec.QuoteCurrency, fee);
                 if (makerSpr.isEmpty())
                 {
                     removePositionRecord(makerSpr, maker);
@@ -826,7 +827,7 @@ namespace Exchange.Core.Processors
 
         private void removePositionRecord(SymbolPositionRecord record, UserProfile userProfile)
         {
-            userProfile.accounts[record.currency] += record.profit;
+            userProfile.accounts.AddValue(record.currency, record.profit);
             userProfile.positions.Remove(record.symbol);
             objectsPool.Put(ObjectsPool.SYMBOL_POSITION_RECORD, record);
         }

@@ -44,5 +44,7 @@ ApiOrderBookRequest :
     int symbol
     int size
 
+ApiReset :
+
 ApiNop :
 
