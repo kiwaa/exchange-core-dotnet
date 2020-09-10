@@ -34,3 +34,9 @@ MultiSymbolGenResult :
     Task<List<ApiCommand>> apiCommandsBenchmark
     int benchmarkCommandsSize
 
+SlowCommandRecord :
+    int minLatency
+    int seqNumber
+    ApiCommand apiCommand
+    int eventsNum
+

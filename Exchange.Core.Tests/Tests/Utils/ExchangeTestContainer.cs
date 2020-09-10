@@ -338,7 +338,7 @@ namespace Exchange.Core.Tests.Utils
                                                                           AllowedSymbolTypes allowedSymbolTypes)
         {
             Random random = new Random(1);
-
+            
             Func<SymbolType> symbolTypeSupplier;
 
             switch (allowedSymbolTypes)
@@ -361,8 +361,10 @@ namespace Exchange.Core.Tests.Utils
             List<CoreSymbolSpecification> result = new List<CoreSymbolSpecification>();
             for (int i = 0; i < num;)
             {
-                int baseCurrency = currencies[random.Next(currencies.Count)];
-                int quoteCurrency = currencies[random.Next(currencies.Count)];
+                var tmp1 = random.Next(currencies.Count);
+                int baseCurrency = currencies[tmp1];
+                var tmp2 = random.Next(currencies.Count);
+                int quoteCurrency = currencies[tmp2];
                 if (baseCurrency != quoteCurrency)
                 {
                     SymbolType type = symbolTypeSupplier();

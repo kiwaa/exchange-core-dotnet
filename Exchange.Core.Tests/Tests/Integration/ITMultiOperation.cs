@@ -37,7 +37,8 @@ namespace Exchange.Core.Tests.Tests.Integration
             );
         }
 
-        [Test, Timeout(60_000)]
+//        [Test, Timeout(60_000)]
+        [Test]
         public void shouldPerformExchangeOperations()
         {
             ThroughputTestsModule.throughputTestImpl(

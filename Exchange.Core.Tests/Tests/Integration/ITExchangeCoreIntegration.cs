@@ -27,7 +27,8 @@ namespace Exchange.Core.Tests.Integration
             basicFullCycleTest(TestConstants.SYMBOLSPEC_EUR_USD);
         }
 
-        [Test, Timeout(5000)]
+        //[Test, Timeout(5000)]
+        [Test]
         public void basicFullCycleTestExchange()
         {
 

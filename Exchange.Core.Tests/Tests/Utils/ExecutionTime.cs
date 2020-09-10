@@ -18,6 +18,7 @@ namespace Exchange.Core.Tests.Utils
 
         private bool _disposed = false;
 
+        public long ResultNs => (endNs - startNs) / Stopwatch.Frequency * NANOS_PER_SECOND;
         public ExecutionTime()
         {
             this.executionTimeConsumer = s =>
@@ -42,8 +43,7 @@ namespace Exchange.Core.Tests.Utils
 
         public String getTimeFormatted()
         {
-            var result = (endNs - startNs) / Stopwatch.Frequency * NANOS_PER_SECOND;
-            return LatencyTools.formatNanos(result);
+            return LatencyTools.formatNanos(ResultNs);
         }
     }
 

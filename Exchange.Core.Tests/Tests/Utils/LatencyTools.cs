@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HdrHistogram;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,13 +12,16 @@ namespace Exchange.Core.Tests.Utils
 
         private static readonly double[] PERCENTILES = new double[] { 50, 90, 95, 99, 99.9, 99.99 };
 
-        //public static Map<String, String> createLatencyReportFast(Histogram histogram)
-        //{
-        //    final Map<String, String> fmt = new LinkedHashMap<>();
-        //    Arrays.stream(PERCENTILES).forEach(p->fmt.put(p + "%", formatNanos(histogram.getValueAtPercentile(p))));
-        //    fmt.put("W", formatNanos(histogram.getMaxValue()));
-        //    return fmt;
-        //}
+        public static Dictionary<String, String> createLatencyReportFast(IntHistogram histogram)
+        {
+            Dictionary<String, String> fmt = new Dictionary<String, String>();
+            foreach (var p in PERCENTILES)
+            {
+                fmt[p + "%"] = formatNanos(histogram.GetValueAtPercentile(p));
+            }
+            fmt["W"] = formatNanos(histogram.GetMaxValue());
+            return fmt;
+        }
 
         public static String formatNanos(long ns)
         {

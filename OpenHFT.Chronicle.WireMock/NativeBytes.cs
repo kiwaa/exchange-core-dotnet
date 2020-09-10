@@ -24,7 +24,9 @@ namespace OpenHFT.Chronicle.WireMock
 
         public int readRemaining()
         {
-            return _position;
+            var size = sizeof(long) * requiredLongArraySize(_position);
+
+            return size;
         }
 
         public IBytesOut writeLong(long p)
@@ -54,7 +56,10 @@ namespace OpenHFT.Chronicle.WireMock
         }
         public Span<byte> read()
         {
-            return _buffer.AsSpan(0, _position);
+            var size = sizeof(long) * requiredLongArraySize(_position);
+            if (size > _buffer.Length)
+                throw new NotImplementedException();
+            return _buffer.AsSpan(0, size);
         }
 
         public int readInt()
@@ -111,5 +116,10 @@ namespace OpenHFT.Chronicle.WireMock
             Array.Copy(_buffer, tmp, _buffer.Length);
             _buffer = tmp;
         }
+        public static int requiredLongArraySize(int bytesLength)
+        {
+            return ((bytesLength - 1) >> 3) + 1;
+        }
+
     }
 }

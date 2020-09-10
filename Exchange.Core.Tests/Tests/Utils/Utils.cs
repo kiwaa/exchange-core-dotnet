@@ -345,6 +345,64 @@ namespace Exchange.Core.Tests.Utils
             }
         }
     }
+    public sealed partial class SlowCommandRecord : IEquatable<SlowCommandRecord>
+    {
+        public int MinLatency { get; set; }
+        public int SeqNumber { get; set; }
+        public ApiCommand ApiCommand { get; set; }
+        public int EventsNum { get; set; }
+        public SlowCommandRecord(int minLatency, int seqNumber, ApiCommand apiCommand, int eventsNum)
+        {
+            MinLatency = minLatency;
+            SeqNumber = seqNumber;
+            ApiCommand = apiCommand;
+            EventsNum = eventsNum;
+        }
+
+        public bool Equals(SlowCommandRecord other)
+        {
+              return MinLatency.Equals(other.MinLatency) && SeqNumber.Equals(other.SeqNumber) && ApiCommand.Equals(other.ApiCommand) && EventsNum.Equals(other.EventsNum);
+        }
+
+        public static SlowCommandRecordBuilder Builder()
+        {
+              return new SlowCommandRecordBuilder();
+        }
+
+        public sealed class SlowCommandRecordBuilder
+        {
+            private int _minLatency;
+            private int _seqNumber;
+            private ApiCommand _apiCommand;
+            private int _eventsNum;
+
+            public SlowCommandRecordBuilder minLatency(int value)
+            {
+                _minLatency = value;
+                return this;
+            }
+            public SlowCommandRecordBuilder seqNumber(int value)
+            {
+                _seqNumber = value;
+                return this;
+            }
+            public SlowCommandRecordBuilder apiCommand(ApiCommand value)
+            {
+                _apiCommand = value;
+                return this;
+            }
+            public SlowCommandRecordBuilder eventsNum(int value)
+            {
+                _eventsNum = value;
+                return this;
+            }
+
+            public SlowCommandRecord build()
+            {
+                return new SlowCommandRecord(_minLatency, _seqNumber, _apiCommand, _eventsNum);
+            }
+        }
+    }
 }
 
 

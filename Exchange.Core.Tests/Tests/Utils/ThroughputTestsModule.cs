@@ -40,9 +40,10 @@ namespace Exchange.Core.Tests.Tests.Utils
                                     // compare orderBook final state just to make sure all commands executed same way
                                     foreach (var symbol in testDataFutures.CoreSymbolSpecifications.Result)
                                     {
+                                        var tmp = container.requestCurrentOrderBook(symbol.SymbolId);
                                         Assert.AreEqual(
                                                        testDataFutures.GenResult.Result.GenResults[symbol.SymbolId].FinalOrderBookSnapshot,
-                                                       container.requestCurrentOrderBook(symbol.SymbolId));
+                                                       tmp);
                                     }
 
                                     // TODO compare events, balances, positions

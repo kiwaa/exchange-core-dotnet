@@ -701,6 +701,23 @@ namespace Exchange.Core.Utils
             return true;
         }
 
-        public long[] GetBits() => bits;
+        public IEnumerable<int> GetBits()
+        {
+            for (int i = 0; i < bits.Length; ++i)
+            {
+                long bit = 1;
+                long word = bits[i];
+                if (word == 0)
+                    continue;
+                for (int j = 0; j < 64; ++j)
+                {
+                    if ((word & bit) != 0)
+                    {
+                        yield return 64 * i + j;
+                    }
+                    bit <<= 1;
+                }
+            }
+        }
     }
 }
