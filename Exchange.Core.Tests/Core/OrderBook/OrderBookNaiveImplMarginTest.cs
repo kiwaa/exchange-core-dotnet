@@ -1,6 +1,7 @@
 ﻿using Exchange.Core.Common;
 using Exchange.Core.Common.Config;
 using Exchange.Core.Orderbook;
+using Exchange.Core.Tests.Utils;
 using NUnit.Framework;
 
 namespace Exchange.Core.Tests.Core.OrderBook

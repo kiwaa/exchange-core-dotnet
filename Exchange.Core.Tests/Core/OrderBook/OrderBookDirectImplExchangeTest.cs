@@ -2,6 +2,7 @@
 using Exchange.Core.Common;
 using Exchange.Core.Common.Config;
 using Exchange.Core.Orderbook;
+using Exchange.Core.Tests.Utils;
 using NUnit.Framework;
 using ObjectsPool = Exchange.Core.Collections.ObjPool.NaiveObjectsPool;
 

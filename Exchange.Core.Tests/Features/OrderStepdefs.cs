@@ -28,10 +28,6 @@ namespace Exchange.Core.Tests.Steps
         private List<MatcherTradeEvent> matcherEvents;
         private Dictionary<long, ApiPlaceOrder> orders = new Dictionary<long, ApiPlaceOrder>();
 
-        public OrderStepdefs()
-        {
-        }
-
         [Before]
         public void before()
         {

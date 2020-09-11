@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Exchange.Core.Tests
+namespace Exchange.Core.Tests.Utils
 {
     public sealed class TestConstants
     {
