@@ -258,7 +258,7 @@ namespace Exchange.Core.Tests.Utils
             api.submitCommandAsync(ApiNop.Builder().build()).Wait();
         }
 
-        public void usersInit(int numUsers, HashSet<int> currencies)
+        public void usersInit(int numUsers, HashSet<int> currencies, long amount = 1_000_000_000L)
         {
             foreach (var uid in Enumerable.Range(1, numUsers))
             {
@@ -269,7 +269,7 @@ namespace Exchange.Core.Tests.Utils
                     api.submitCommand(ApiAdjustUserBalance.Builder()
                             .uid(uid)
                             .transactionId(transactionId++)
-                            .amount(10_0000_0000L)
+                            .amount(amount)
                             .currency(currency).build());
                 }
             }

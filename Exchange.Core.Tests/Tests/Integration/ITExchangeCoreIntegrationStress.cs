@@ -34,6 +34,7 @@ namespace Exchange.Core.Tests.Tests.Integration
 
         public void manyOperations(CoreSymbolSpecification symbolSpec)
         {
+            const long balanceAmount = 5 * 1_000_000_000L;
             using (ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration()))
             {
                 container.initBasicSymbols();
@@ -61,13 +62,13 @@ namespace Exchange.Core.Tests.Tests.Integration
                 HashSet<int> allowedCurrencies = Enumerable.Range(symbolSpec.QuoteCurrency, symbolSpec.BaseCurrency).ToHashSet();
 
                 log.Debug("Users init ...");
-                container.usersInit(numUsers, allowedCurrencies);
+                container.usersInit(numUsers, allowedCurrencies, balanceAmount);
 
                 // validate total balance as a sum of loaded funds
                 Action<Dictionary<int, long>> balancesValidator = balances =>
                 {
                     foreach (var cur in allowedCurrencies)
-                        Assert.AreEqual(balances[cur], 10_0000_0000L * numUsers);
+                        Assert.AreEqual(balances[cur], balanceAmount * numUsers);
                 };
                 log.Debug("Verifying balances...");
                 balancesValidator(container.totalBalanceReport().getClientsBalancesSum());
