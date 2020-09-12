@@ -53,8 +53,18 @@ namespace Exchange.Core.Tests.Utils
         // naive replacement
         public static List<T> mergeCollections<T>(IEnumerable<IEnumerable<T>> chunks, long seed)
         {
-            var list = chunks.SelectMany(x => x).ToList();
-            list.Shuffle(new Random((int)seed));
+            var rnd = new Random((int)seed);
+            var list = new List<T>();
+            var tmp = chunks.Select(x => new Queue<T>(x)).ToList();
+            while(tmp.Count > 0)
+            {
+                var listInd = rnd.Next(tmp.Count);
+
+                var element = tmp[listInd].Dequeue();
+                list.Add(element);
+                if (tmp[listInd].Count == 0)
+                    tmp.RemoveAt(listInd);
+            }
             return list;
         }
     }

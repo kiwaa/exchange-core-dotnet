@@ -153,10 +153,10 @@ namespace Exchange.Core
             //{
             //    return submitPersistCommandAsync((ApiPersistState)cmd);
             //}
-            //else if (cmd is ApiReset)
-            //{
-            //    return submitCommandAsync(RESET_TRANSLATOR, (ApiReset)cmd);
-            //}
+            else if (cmd is ApiReset)
+            {
+                return submitCommandAsync(ResetTranslator.Instance, (ApiReset)cmd);
+            }
             else if (cmd is ApiNop)
             {
                 return submitCommandAsync(NopTranslator.Instance, (ApiNop)cmd);
@@ -554,6 +554,17 @@ namespace Exchange.Core
             }
         };
 
+        private class ResetTranslator : IEventTranslatorOneArg<OrderCommand, ApiReset>
+        {
+            public static readonly ResetTranslator Instance = new ResetTranslator();
+            public void TranslateTo(OrderCommand cmd, long seq, ApiReset api)
+            {
+                cmd.Command = OrderCommandType.RESET;
+                cmd.Timestamp = api.Timestamp;
+                cmd.ResultCode = CommandResultCode.NEW;
+            }
+        };
+
         private class NopTranslator : IEventTranslatorOneArg<OrderCommand, ApiNop>
         {
             public static readonly NopTranslator Instance = new NopTranslator();
@@ -588,12 +599,6 @@ namespace Exchange.Core
     //private static final EventTranslatorOneArg<OrderCommand, ApiResumeUser> RESUME_USER_TRANSLATOR = (cmd, seq, api)-> {
     //    cmd.command = OrderCommandType.RESUME_USER;
     //    cmd.uid = api.uid;
-    //    cmd.timestamp = api.timestamp;
-    //    cmd.resultCode = CommandResultCode.NEW;
-    //};
-
-    //private static final EventTranslatorOneArg<OrderCommand, ApiReset> RESET_TRANSLATOR = (cmd, seq, api)-> {
-    //    cmd.command = OrderCommandType.RESET;
     //    cmd.timestamp = api.timestamp;
     //    cmd.resultCode = CommandResultCode.NEW;
     //};
